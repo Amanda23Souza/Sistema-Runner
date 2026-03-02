@@ -1,38 +1,23 @@
-# Contexto e Escopo - Trabalho Prático
+# Sistema Runner - Trabalho Prático
 
 ## 1. Visão geral
 
-Este documento define o contexto e escopo do trabalho prático da disciplina de Implementação e Integração do Bacharelado em Engenharia de Software (2026). O trabalho visa proporcionar aos estudantes a oportunidade de prática de construção de software por meio do desenvolvimento do Sistema Assinador.
+Este documento define o contexto e escopo do trabalho prático da disciplina de Implementação e Integração do Bacharelado em Engenharia de Software (2026). O trabalho visa proporcionar aos estudantes a oportunidade de prática de construção de software por meio do desenvolvimento do *Sistema Runner*.
 
-## 2. Objetivos do Sistema Assinador
+## 2. Objetivo do Sistema Runner
 
-Implementar acesso à funcionalidade de criação e validação de 
-assinatura digital via linha de comandos. 
+Implementar acesso à funcionalidade de execução de aplicações Java via linha de comandos. 
 
-### Diagrama de Contexto
+## 3. Objetivos específicos
 
-```
-┌─────────────────┐                              ┌─────────────────────┐
-│                 │                              │                     │
-│    Usuário      │                              │  Dispositivo de     │
-│                 │                              │  Assinatura Digital │
-└────────┬────────┘                              │  (Token/Smart Card) │
-         │                                       └──────────┬──────────┘
-         │ Comandos CLI                                     │
-         │ (criar, validar)                                 │ Operações
-         │                                                  │ criptográficas
-         │                                                  │
-         ▼                                                  ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                                                                        │
-│                      Sistema Assinador                                 │
-│                                                                        │
-│  Funcionalidades:                                                      │
-│  • Criação de assinaturas digitais                                     │
-│  • Validação de assinaturas digitais                                   │
-│                                                                        │
-└────────────────────────────────────────────────────────────────────────┘
-```
+1. O sistema deve ser capaz de invocar a aplicação Java **assinador.jar**, doravante, apenas Assinador.
+2. O sistema inclui o desenvolvimento do Assinador, que simula a criação e validação de assinaturas digitais. Embora a criação e a validação sejam simuladas, esta aplicação deve validar os parâmetros de entrada. A confecção do Assinador inclui interação com dispositivo de assinatura digital (token ou smart card) via PKCS#11.
+3. O sistema deve ser capaz de gerir o ciclo de vida de execução do Simulador do HubSaúde, uma aplicação Java real (**simulador.jar**), doravante denominado de Simulador. Este simulador não será desenvolvido como parte do Sistema Runner.
+4. O sistema deve ser capaz de baixar o JDK necessário para a execução tanto do Assinador quanto do Simulador, caso o JDK não esteja presente na máquina do usuário.
+
+### Diagrama de Contexto (na perspectiva do assinador.jar)
+
+![](diagramas/imagens/contexto.svg)
 
 **Atores e Sistemas Externos:**
 
@@ -40,58 +25,16 @@ assinatura digital via linha de comandos.
 |----------|------|-----------|
 | Usuário | Ator | Pessoa que interage com o sistema via linha de comandos |
 | Dispositivo de Assinatura Digital | Sistema Externo | Hardware criptográfico (token USB, smart card) que armazena certificados e executa operações de assinatura |
-| Sistema Assinador | Sistema | Aplicação que orquestra as operações de assinatura digital |
+| Assinador (runner) | Sistema | Aplicação que orquestra as operações de assinatura digital |
 
 ## 3. Identificação de contêineres
 
 O sistema é composto por duas aplicações que trabalham de forma integrada: a aplicação
-**assinatura** e a aplicação **assinador.jar**.
+**assinatura** e a aplicação Assinador.
 
 ### Diagrama de Contêineres
 
-```
-┌─────────────────┐                                        ┌─────────────────────┐
-│                 │                                        │                     │
-│    Usuário      │                                        │  Dispositivo de     │
-│                 │                                        │  Assinatura Digital │
-└────────┬────────┘                                        │  (Token/Smart Card) │
-         │                                                 └──────────▲──────────┘
-         │ Comandos CLI                                               │
-         │ (criar, validar)                                           │ PKCS#11
-         │                                                            │ (operações
-         ▼                                                            │ criptográficas)
-┌────────────────────────────────────────┐                            │
-│                                        │                            │
-│   assinatura (CLI)                     │                            │
-│                                        │                            │
-│   Tecnologia: A definir                │                            │
-│   (Python, Go, Rust, Node.js)          │                            │
-│                                        │                            │
-│   Responsabilidades:                   │                            │
-│   • Receber comandos do usuário        │                            │
-│   • Validar sintaxe dos parâmetros     │                            │
-│   • Formatar saída para o usuário      │                            │
-│                                        │                            │
-└────────────────┬───────────────────────┘                            │
-                 │                                                    │
-                 │ Invoca/Requisita                                   │
-                 │ (CLI ou HTTP)                                      │
-                 │                                                    │
-                 ▼                                                    │
-┌────────────────────────────────────────┐                            │
-│                                        │                            │
-│   assinador.jar                        │                            │
-│                                        │                            │
-│   Tecnologia: Java 11+ (JAR)           │                            │
-│                                        │                            │
-│   Responsabilidades:                   │                            │
-│   • Validar parâmetros de entrada      │                            │
-│   • Interagir com dispositivo cripto   │────────────────────────────┘
-│   • Executar operações de assinatura   │
-│   • Retornar resultados estruturados   │
-│                                        │
-└────────────────────────────────────────┘
-```
+
 
 **Comunicação entre Contêineres:**
 
