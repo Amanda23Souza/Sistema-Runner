@@ -10,11 +10,82 @@ Facilitar o acesso à funcionalidade de execução de aplicações Java via linh
 
 ## 3. Objetivos específicos
 
-1. O sistema deve ser capaz de invocar a aplicação Java **assinador.jar**, doravante, apenas Assinador.
-2. O sistema inclui o desenvolvimento do Assinador, que simula a criação e validação de assinaturas digitais. Embora a criação e a validação sejam simuladas, esta aplicação deve validar os parâmetros de entrada. A confecção do Assinador inclui interação com dispositivo de assinatura digital (token ou smart card) via PKCS#11.
-3. O sistema deve ser capaz de gerir o ciclo de vida de execução do Simulador do HubSaúde, uma aplicação Java real (**simulador.jar**), doravante denominado de Simulador. Este simulador não será desenvolvido como parte do Sistema Runner.
-4. O sistema deve ser capaz de baixar o JDK necessário para a execução tanto do Assinador quanto do Simulador, caso o JDK não esteja presente na máquina do usuário.
-5. O sistema deve ser disponibilizado em três versões pré-compiladas para as plataformas Windows, Linux e macOS, distribuídas via GitHub Releases.
+1. Permitir que os usuários possam executar aplicações Java sem necessidade de conhecer detalhes de configuração ou instalação do ambiente Java. Em particular, as aplicações que fazem parte do Sistema Runner. 
+
+2. Fornecer uma interface de linha de comandos (CLI) simples e intuitiva para interação com as aplicações Java, permitindo que os usuários possam executar comandos específicos para cada aplicação. Desta forma, ocultando a complexidade de configuração ou facilitando o acesso às funcionalidades sem necessidade de conhecimento técnico aprofundado.
+
+
+## 4. Requisitos do Sistema Runner
+
+### US-01: Invocar Assinador via CLI
+
+**Como** usuário do Sistema Runner  
+**Quero** executar comandos de assinatura digital através da linha de comandos  
+**Para que** eu possa invocar a aplicação **assinador.jar** (doravante, Assinador) sem conhecer os detalhes técnicos de configuração Java
+
+**Critérios de aceitação:**
+- [ ] O CLI deve aceitar comandos para criação e validação de assinatura
+- [ ] O CLI deve invocar o Assinador com os parâmetros fornecidos
+- [ ] O CLI deve exibir o resultado da operação de forma legível
+
+---
+
+### US-02: Simular Assinatura Digital com Validação de Parâmetros
+
+**Como** usuário do Sistema Runner  
+**Quero** que o Assinador valide rigorosamente os parâmetros de entrada antes de simular uma operação de assinatura digital  
+**Para que** eu receba feedback imediato sobre erros de parâmetros, garantindo que apenas requisições bem formadas sejam processadas
+
+**Critérios de aceitação:**
+- [ ] O Assinador deve validar todos os parâmetros conforme especificações FHIR
+- [ ] O Assinador deve simular criação de assinatura retornando resposta pré-construída quando parâmetros válidos
+- [ ] O Assinador deve simular validação de assinatura retornando resultado pré-determinado
+- [ ] O Assinador deve suportar interação com dispositivo criptográfico (token/smart card) via interface PKCS#11
+- [ ] O Assinador deve retornar mensagens de erro claras quando parâmetros forem inválidos
+
+---
+
+### US-03: Gerenciar Ciclo de Vida do Simulador do HubSaúde
+
+**Como** usuário do Sistema Runner  
+**Quero** iniciar, parar e monitorar o Simulador do HubSaúde (**simulador.jar**) através do CLI  
+**Para que** eu possa gerenciar o ciclo de vida do Simulador sem conhecer os comandos Java subjacentes
+
+**Critérios de aceitação:**
+- [ ] O CLI deve permitir iniciar o Simulador
+- [ ] O CLI deve permitir parar o Simulador
+- [ ] O CLI deve exibir o status atual do Simulador
+- [ ] O Simulador (simulador.jar) não faz parte do escopo de desenvolvimento deste sistema
+
+---
+
+### US-04: Provisionar JDK Automaticamente
+
+**Como** usuário do Sistema Runner  
+**Quero** que o sistema baixe e configure automaticamente o JDK necessário quando este não estiver disponível  
+**Para que** eu possa utilizar o Assinador e o Simulador sem precisar instalar ou configurar o Java manualmente
+
+**Critérios de aceitação:**
+- [ ] O sistema deve detectar se o JDK está presente na máquina
+- [ ] O sistema deve baixar o JDK compatível quando ausente
+- [ ] O sistema deve configurar o JDK baixado para uso pelo Assinador e Simulador
+- [ ] O download deve funcionar nas três plataformas suportadas
+
+---
+
+### US-05: Disponibilizar Binários Multiplataforma
+
+**Como** usuário do Sistema Runner  
+**Quero** baixar uma versão pré-compilada do CLI para minha plataforma (Windows, Linux ou macOS)  
+**Para que** eu possa utilizar o sistema imediatamente sem necessidade de compilação
+
+**Critérios de aceitação:**
+- [ ] Disponibilizar binário para Windows (amd64)
+- [ ] Disponibilizar binário para Linux (amd64)
+- [ ] Disponibilizar binário para macOS (amd64)
+- [ ] Distribuir via GitHub Releases
+- [ ] Incluir checksums SHA256 para verificação de integridade
+- [ ] Utilizar versionamento semântico (SemVer)
 
 ## 4. Diagrama de Contexto
 
