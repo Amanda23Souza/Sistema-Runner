@@ -4,6 +4,7 @@ Especificação do trabalho prático da disciplina Implementação e Integraçã
 
 - [Especificação](especificacao.md)
 - [Design](design.md)
+- Forneça o seu nome e o repositorio no github usado exclusivamente para o registro das atividades da disciplina. Se grupo, máximo de 2 membros, repita a URL do repositório.
 
 # O que está rolando... (desde 10/03/2026)
 
