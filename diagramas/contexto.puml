@@ -1,0 +1,16 @@
+@startuml contexto
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_LEFT_RIGHT()
+
+Person(Usuario, "Usuário", "Interage com o Sistema Runner via CLI")
+System(Assinador, "Sistema Runner", "Baixa JDK, instala, executa e interage com o Simulador e/ou Assinador.")
+System_Ext(Dispositivo, "Dispositivo de Assinatura Digital", "Token ou smart card que realiza operações criptográficas via PKCS#11.")
+System_Ext(SimuladorHub, "Simulador do HubSaúde", "Aplicação Java real (simulador.jar) orquestrada pelo Runner.")
+
+Rel(Usuario, Assinador, "Comandos CLI (criar, validar)")
+Rel(Assinador, Usuario, "Resultados formatados")
+Rel(Assinador, Dispositivo, "Operações criptográficas", "PKCS#11")
+Rel(Assinador, SimuladorHub, "Controla ciclo de vida e invoca", "CLI/HTTP")
+
+@enduml

@@ -1,0 +1,24 @@
+@startuml conteineres
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(Usuario, "Usuário", "Opera os CLIs do Runner para criar/validar assinaturas e controlar o simulador.")
+System_Ext(Dispositivo, "Dispositivo de Assinatura Digital", "Token ou smart card compatível com PKCS#11.")
+System_Ext(SimuladorWeb, "Simulador do HubSaúde", "Aplicação Web gerida pelo CLI e que responde a requisições de terceiros.")
+
+System_Boundary(Runner, "Sistema Runner") {
+    Container(AssinadorCLI, "assinador CLI", "CLI multiplataforma", "Recebe comandos de assinatura do usuário e coordena o processo.")
+    Container(AssinadorJar, "assinador.jar", "Java (aplicação web)", "Processo que valida parâmetros e simula assinaturas interagindo com o dispositivo criptográfico.")
+    Container(SimuladorCLI, "simulador CLI", "CLI multiplataforma", "Gerencia o ciclo de vida do simulador real e expõe comandos ao usuário.")
+}
+
+
+Rel(Usuario, AssinadorCLI, "Comandos de assinatura (criar, validar)")
+Rel(Usuario, SimuladorCLI, "Comandos de gerenciamento do simulador")
+Rel(AssinadorCLI, AssinadorJar, "Invoca operações de assinatura", "CLI/HTTP")
+Rel_Right(AssinadorJar, Dispositivo, "Operações criptográficas", "PKCS#11")
+Rel_Right(SimuladorCLI, SimuladorWeb, "Invoca e monitora", "HTTP/CLI")
+
+@enduml
