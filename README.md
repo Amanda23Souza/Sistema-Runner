@@ -14,12 +14,12 @@ Repositório dedicado para desenvolvimento do projeto Runner, da disciplina impl
 
 | Campo | Preenchimento |
 |---|---|
-| Iteração | Iteração 1 - MVP de Assinatura (foco em [US-01](especificação/especificacao.md#us-01-invocar-assinador-via-cli) e [US-02](especificação/especificacao.md#us-02-simular-assinatura-digital-com-validação-de-parâmetros)) |
+| Iteração | Iteração 1 - MVP de Assinatura (foco em [US-01](requisitos/funcional/US-01-invocar-assinador-via-cli.md) e [US-02](requisitos/funcional/US-02-simular-assinatura-validacao-parametros.md)) |
 | Estimativa (início/fim) | 18/03/2026 a 01/04/2026 (2 semanas) |
-| Objetivo principal | Facilitar a execução de aplicações Java via CLI, ocultando complexidade de configuração do ambiente Java, com foco na integração entre assinatura e assinador.jar em modo local e HTTP (ver [Objetivo do Sistema Runner](especificação/especificacao.md#2-objetivo-do-sistema-runner) e [Integração entre aplicações](especificação/especificacao.md#6-integração-entre-aplicações)). |
-| Entregas esperada | CLI assinatura com comandos criar/validar ([US-01](especificação/especificacao.md#us-01-invocar-assinador-via-cli)); assinador.jar com validação de parâmetros e simulação ([US-02](especificação/especificacao.md#us-02-simular-assinatura-digital-com-validação-de-parâmetros)); integração assinatura <-> assinador.jar ([Seção 6](especificação/especificacao.md#6-integração-entre-aplicações)); testes iniciais e documentação ([Entregáveis](especificação/especificacao.md#7-entregáveis)). |
+| Objetivo principal | Facilitar a execução de aplicações Java via CLI, ocultando complexidade de configuração do ambiente Java, com foco na integração entre assinatura e assinador.jar em modo local e HTTP (ver [Catálogo de Requisitos](requisitos/README.md) e [US-01](requisitos/funcional/US-01-invocar-assinador-via-cli.md)). |
+| Entregas esperada | CLI assinatura com comandos criar/validar ([US-01](requisitos/funcional/US-01-invocar-assinador-via-cli.md)); assinador.jar com validação de parâmetros e simulação ([US-02](requisitos/funcional/US-02-simular-assinatura-validacao-parametros.md)); integração assinatura <-> assinador.jar ([US-01](requisitos/funcional/US-01-invocar-assinador-via-cli.md)); testes iniciais e documentação ([Catálogo de Requisitos](requisitos/README.md)). |
 
-Referências complementares: [US-03](especificação/especificacao.md#us-03-gerenciar-ciclo-de-vida-do-simulador-do-hubsaúde), [US-04](especificação/especificacao.md#us-04-provisionar-jdk-automaticamente), [US-05](especificação/especificacao.md#us-05-disponibilizar-binários-multiplataforma).
+Referências complementares: [US-03](requisitos/funcional/US-03-gerenciar-simulador-hubsaude.md), [US-04](requisitos/funcional/US-04-provisionar-jdk-automaticamente.md), [US-05](requisitos/funcional/US-05-disponibilizar-binarios-multiplataforma.md), [Regras de negócio gerais](requisitos/funcional/regras-negocio-gerais.md), [Requisitos não funcionais](requisitos/nao-funcional/RNF-01-desempenho.md).
 
 ### 2. Design
 
