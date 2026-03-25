@@ -1,4 +1,4 @@
-# Plano (revisado em 24/03/2026)
+# Plano revisado #1
 
 - CLIs serão feitos em Go por nativamente lidar com cross-compiling e funcionalidades usadas são "básicas" (Go 1.25).
 - O assinador.jar será, por restrição de projeto, feito em Java (versão adotada 21).
