@@ -6,4 +6,4 @@ Conteúdo esperado:
 - Diagramas de casos de uso (opcional) e de atividades para fluxos complexos.
 - Descrições passo-a-passo dos cenários, entradas, saídas e tratamentos de erro.
 
-Referência existente: [especificação/design.md](../../especificação/design.md)
+Referência existente: [especificação/design.md](../../docs/design.md)

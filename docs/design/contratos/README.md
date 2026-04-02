@@ -6,4 +6,4 @@ Conteúdo esperado:
 - Schemas JSON (ou outro formato) para payloads de criação/validação de assinatura.
 - Exemplo de erros (RFC 7807 / Problem Details) e códigos de status.
 
-Referência existente: [especificação/design.md](../../especificação/design.md)
+Referência existente: [especificação/design.md](../../docs/design.md)

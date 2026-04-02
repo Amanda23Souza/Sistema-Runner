@@ -29,7 +29,7 @@ Abaixo está a lista de artefatos de design detalhado e seus locais no repositó
 | Contratos / API (OpenAPI, exemplos) | [design/contratos](design/contratos/README.md) | Especificação dos endpoints HTTP, payloads e exemplos de request/response; formato de erros. | Em andamento |
 | Modelo de dados (schemas) | [design/dados](design/dados/README.md) | Schemas para entradas/saídas (JSON Schema), mapeamento de campos e exemplos. | Em andamento |
 
-Referência adicional: design amostral em [especificação/design.md](especificação/design.md).
+Referência adicional: design amostral em [especificação/design.md](../docs/design.md).
 ### 3. Preparação de Ambiente e Convenções
 
 | Tópico | Definição | Status |

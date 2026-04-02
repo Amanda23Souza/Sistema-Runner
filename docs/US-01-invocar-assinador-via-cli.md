@@ -65,4 +65,5 @@ Permitir que o usuario execute comandos de criacao e validacao de assinatura por
 ## Rastreabilidade
 
 - Origem: Especificacao, secao 5, US-01.
+- Sub-historias: US-01.1, US-01.2, US-01.3, US-01.4, US-01.5, US-01.6, US-01.7, US-01.8, US-01.9.
 - Relacao: Integracao entre aplicacoes (secao 6).

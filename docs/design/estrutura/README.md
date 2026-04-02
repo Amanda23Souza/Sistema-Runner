@@ -6,4 +6,4 @@ Conteúdo esperado:
 - Diagrama de deployment (onde cada componente roda: cliente, servidor Java, dispositivo criptográfico, JDK provisionado).
 - Notas sobre versões, runtime e entradas de configuração.
 
-Referência existente: [especificação/design.md](../../especificação/design.md)
+Referência existente: [especificação/design.md](../../docs/design.md)
