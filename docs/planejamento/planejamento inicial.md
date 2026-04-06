@@ -2,12 +2,12 @@
 
 ## Integrantes
 
-| Papel | Nome | GitHub |
-|---|---|---|
-| - | Marcello Ronald | https://github.com/mronald-js |
-| - | Amanda Soares  |  |  |
+| Nome | GitHub |
+---|---|
+|  Marcello Ronald | https://github.com/mronald-js |
+| Amanda Soares  | https://github.com/Amanda23Souza |  |
 
-### 1. Contexto da Iteração
+### 1. Interações
 
 | Campo | Descrição |
 |---|---|
