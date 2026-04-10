@@ -1,69 +1,141 @@
 # Sistema-Runner
-Repositório dedicado para desenvolvimento do projeto Runner, da disciplina implementação e integração de software.
 
-## Status atual do módulo `cli-assinatura`
+Repositório dedicado para desenvolvimento do **projeto Runner**, da disciplina **Implementação e Integração de Software** (UFG).
 
-### ✅ Implementado
-- Estrutura de projeto Go em `cli-assinatura`.
-- `go.mod` configurado para `github.com/Amanda23Souza/Sistema-Runner/cli-assinatura`.
-- `main.go` atualizado para usar o módulo `cmd`:
-  - entrada via `cmd.Execute()`.
-- Comando `version` funcional (valor padrão `v0.1.0`, overridable via `-ldflags`).
-- Comando `help` funcional com lista de comandos e uso básico.
-- Stub básico para `sign` e `validate` (placeholder com argumentos).
-- Tests em `cmd/root_test.go`:
-  - `TestExecute_Version`
-  - `TestExecute_Help`
-  - `TestExecute_UnknownCommand`
+O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facilita operações de assinatura digital através da linha de comando, sem necessidade de conhecimento aprofundado em configurações Java.
 
-### ⚠️ O que falta
-- Implementar parser de flags para `sign`/`validate` (ex.: `--input`, `--output`, `--sig`).
-- Implementar integração com `assinador.jar` via `java -jar`.
-- Implementar descoberta/caching de JDK 21 (`~/.hubsaude/jdk`).
-- Implementar payload/response estruturado e validações (US-02.1/US-02.2/US-02.3).
-- Implementar testes de integração real (CLI -> assinar.jar) (Sprint 2).
-- `go test` não executou aqui porque ambiente não tem Go instalado (`go` missing). Precisa rodar localmente com Go 1.26+.
+### [📌 Nosso planejamento](https://github.com/Amanda23Souza/Sistema-Runner/blob/main/docs/planejamento/nossoPlanejamento.md)
 
-## Como testar localmente
-
-1. Instalar Go 1.26+ (padrão `go` disponível no PATH):
-   - `go version` deve funcionar.
-   - `which go` não pode retornar vazio.
-2. Executar os comandos:
-   - `cd cli-assinatura`
-   - `go test ./...`
-   - `go run . version`
-   - `go run . help`
-   - `go run . sign --input foo` (output placeholder por enquanto)
-
-## Planejamento Sprint 1 (US-01.1 / US-05.1 / US-05.2)
-
-- [x] Inicializar `go mod`.
-- [x] Estrutura de pacotes (`cmd` + entrypoint). 
-- [x] Comando `version` e `help`.
-- [ ] Cross-compile e pipeline CI/CD (falta `.github/workflows` em repo).
-- [ ] Release SemVer + artifact naming.
-
-## Planejamento Sprint 2 (Fluxo local)
-
-- [ ] `sign`/`validate` com parser e chamada real a `assinador.jar` (`java -jar`).
-- [ ] `FakeSignatureService` (Java). 
-- [ ] Validação de parâmetros. 
-- [ ] Saída legível e mensagens de erro.
-- [ ] Testes de integração ponta a ponta.
-
-## O que você precisa fazer agora
-
-1. Garanta que Go esteja instalado no seu ambiente.
-2. Rode `go test ./...` em `cli-assinatura`.
-3. Prossiga com implementação de parser/execução real de `assinar.jar`.
-4. Refine o backlog em `issues`/`projects` usando os US já mapeados no `plano-revisitado-v2.md`.
 
 ---
 
-## Comandos disponíveis por enquanto
+## 📋 Requisitos
 
-- `assinatura version`  -> Exibe versão do CLI.
-- `assinatura help`    -> Exibe texto de ajuda.
-- `assinatura sign ...` -> Mock placeholder (ainda em implementação).
-- `assinatura validate ...` -> Mock placeholder (ainda em implementação).
+- **Go 1.26.1+** (ou superior)
+- **JDK** instalado (para operações de assinatura digital com `assinador.jar`)
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+cli-assinatura/
+├── cmd/assinatura/
+│   └── main.go              ← Ponto de entrada (executável)
+├── internal/
+│   ├── command/
+│   │   ├── interface.go      ← Interface Command (padrão)
+│   │   ├── root.go           ← Parser e orquestrador
+│   │   ├── version.go        ← Comando de versão
+│   │   ├── sign.go           ← Comando de assinatura (stub)
+│   │   └── validate.go       ← Comando de validação (stub)
+│   ├── version/
+│   │   └── version.go        ← Gerenciamento de versão centralizado
+│   └── app/                  ← Reservado para futuro
+├── go.mod                   ← Definição de módulo Go
+└── assinatura              ← Executável compilado
+```
+
+---
+
+## 🚀 Como Compilar
+
+```bash
+cd cli-assinatura
+go build -o assinatura ./cmd/assinatura
+```
+
+---
+
+## 💻 Como Usar
+
+### Comando `version`
+
+Exibe a versão do assinatura CLI:
+
+```bash
+# Modo padrão
+./assinatura version
+# Saída: assinatura v0.1.0
+
+# Modo quiet (apenas número da versão)
+./assinatura version --quiet
+# Saída: v0.1.0
+
+# Modo JSON
+./assinatura version --json
+# Saída: { "version": "v0.1.0" }
+```
+
+### Comando `version` - Ajuda
+
+```bash
+./assinatura version --help
+```
+
+### Ajuda Geral
+
+```bash
+./assinatura --help
+# ou
+./assinatura
+```
+
+---
+
+## 📊 Status de Implementação
+
+### ✅ Fase 1 - Estrutura Base (Completo)
+
+- ✓ Estrutura de pacotes conforme padrão Go (cmd/, internal/)
+- ✓ Interface `Command` padronizada para todos os comandos
+- ✓ Ponto de entrada minimalista em `cmd/assinatura/main.go`
+- ✓ Gerenciamento centralizado de versão
+
+### ✅ Fase 2 - Comando Version (Completo)
+
+- ✓ Comando `version` totalmente funcional
+- ✓ Flags: `--quiet`, `--json`, `--help`
+- ✓ Exit codes corretos (0 para sucesso, 1 para erro)
+
+### ⏳ Fase 3 - Preparação para Próximos Comandos (Em Progresso)
+
+- ✓ Stubs criados para `sign` e `validate` com estrutura pronta
+- ⏳ Implementação de `sign` (criar assinatura digital)
+- ⏳ Implementação de `validate` (validar assinatura)
+- ⏳ Comandos `start`/`stop` (gerenciador do servidor HTTP)
+
+---
+
+## 📖 Documentação
+
+- **[User Story 01 - Invocar Assinador via CLI](./docs/US-01%20-%20Invocar%20Assinador%20via%20CLI.md)** — Requisitos funcionais e critérios de aceitação
+- **[Planejamento do Projeto](./docs/planejamento/nossoPlanejamento.md)** — Visão geral e timeline
+- **[Design de Arquitetura](./docs/design.md)** — Padrões e decisões técnicas
+
+---
+
+## 🔧 Próximos Passos
+
+1. **Implementar comando `sign`**
+   - Parser de flags: `--input`, `--output`, `--mode`
+   - Validação de parâmetros obrigatórios
+   - Invocação local (java -jar assinador.jar)
+   - Invocação HTTP (fallback se servidor ativo)
+
+2. **Implementar comando `validate`**
+   - Parser de flags: `--input`, `--signature`, `--mode`
+   - Lógica de validação criptográfica
+
+3. **Implementar comandos `start`/`stop`**
+   - Iniciar servidor HTTP do assinador.jar
+   - Encerrar processo com detecção de instância ativa
+   - Timeout de inatividade
+
+4. **Melhorias Técnicas**
+   - Setup de `Makefile` para build multi-plataforma
+   - Injeção de versão via `ldflags` em compile-time
+   - Logging estruturado com `log/slog`
+   - Testes unitários e integração
+
+---
