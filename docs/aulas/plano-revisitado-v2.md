@@ -6,7 +6,7 @@
 - O **assinador.jar** será desenvolvido em **Java 21**, por restrição de projeto.
 - Estratégia **iterativa e incremental**, organizada em **4 sprints de 1 semana**.
 - Cada sprint entrega valor ao usuário ou remove riscos técnicos relevantes.
-- As histórias abaixo são subdivisões dos épicos US-01 a US-05 da [especificação](../especificacao.md), nomeadas como `US-XX.Y` indicando a história de origem.
+- As histórias abaixo são subdivisões dos épicos US-01 a US-05 da [especificação](especificacao.md), nomeadas como `US-XX.Y` indicando a história de origem.
 
 ## Rastreabilidade Épicos → Histórias
 
