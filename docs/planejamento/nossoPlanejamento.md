@@ -21,7 +21,7 @@ Não funcionais
 |---|---|
 | [RNF-01](../requisitos/nao-funcional/RNF-01-desempenho.md) | |
 
-## [Backlog da Iteração](https://github.com/users/Amanda23Souza/projects/1)
+## [Backlog da Iteração](https://github.com/users/Amanda23Souza/projects/1/views/1?verticalGroupedBy[columnId]=271373991)
 
 ### 1. Interações
 
