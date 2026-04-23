@@ -1,13 +1,15 @@
-name: Build and Test (Multi-platform)
+name: Build, Test and Release
 
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
+  id-token: write
 
 jobs:
   build:
@@ -27,9 +29,13 @@ jobs:
             goarch: amd64
             suffix: ""
 
+    env:
+      BINARY_NAME: assinatura-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -40,11 +46,6 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Extract version
-        id: version
-        shell: bash
-        run: echo "VERSION=$(git describe --tags --always 2>/dev/null || echo 'v0.1.0')" >> $GITHUB_OUTPUT
-
       - name: Run tests
         run: go test -v ./...
 
@@ -54,13 +55,58 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
         run: |
-          BINARY_NAME="${{ github.event.repository.name }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
           go build -ldflags="-s -w" -o "$BINARY_NAME" ./cmd/assinatura
 
-      - name: Upload artifact
+      - name: Generate Checksum
+        run: |
+          sha256sum ${{ env.BINARY_NAME }} > ${{ env.BINARY_NAME }}.sha256
+
+      - name: Install Cosign
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: sigstore/cosign-installer@v3.4.0
+
+      - name: Sign binary (Keyless OIDC)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cosign sign-blob --yes ${{ env.BINARY_NAME }} \
+            --output-signature ${{ env.BINARY_NAME }}.sig \
+            --output-certificate ${{ env.BINARY_NAME }}.pem
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: ${{ github.event.repository.name }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
-          if-no-files-found: error
-          retention-days: 7
+          name: ${{ env.BINARY_NAME }}
+          path: |
+            ${{ env.BINARY_NAME }}
+            ${{ env.BINARY_NAME }}.sha256
+            ${{ env.BINARY_NAME }}.sig
+            ${{ env.BINARY_NAME }}.pem
+          if-no-files-found: warn
+
+  release:
+    name: Create Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare dist directory
+        run: |
+          mkdir dist
+          find artifacts -type f -exec cp {} dist/ \;
+          ls -R dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
