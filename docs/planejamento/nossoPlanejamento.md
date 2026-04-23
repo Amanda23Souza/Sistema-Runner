@@ -53,18 +53,14 @@ Referência adicional: design amostral em [especificação/design.md](../docs/de
 | Ferramentas de build | A definir |
 | CI/CD | Pipeline com build + testes + artefatos de validação | Pendente |
 
-
 #### Convenções de código
 
 - **Commits semânticos:** use o padrão `type: subject` (ex.: `feat(cli): adicionar comando criar`).
 - **Revisão por par:** PRs se abertos devem receber aprovação do outro integrante antes do merge.
 
-
-
 ### 4. Planejamento de Testes
 
 O projeto usará BDD com Cucumber para testes de aceitação e JUnit/Mockito para testes unitários.
-
 
 ### 5. Planejamento de Documentação
 

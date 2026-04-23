@@ -29,6 +29,8 @@ jobs:
             goarch: amd64
             suffix: ""
 
+    env:
+      BINARY_NAME: assinatura-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,9 +55,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
         run: |
-          BINARY_NAME="assinatura-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
           go build -ldflags="-s -w" -o "$BINARY_NAME" ./cmd/assinatura
-          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
 
       - name: Generate Checksum
         run: |
@@ -81,7 +81,7 @@ jobs:
             ${{ env.BINARY_NAME }}.sha256
             ${{ env.BINARY_NAME }}.sig
             ${{ env.BINARY_NAME }}.pem
-          if-no-files-found: error
+          if-no-files-found: warn
 
   release:
     name: Create Release

@@ -1,11 +1,12 @@
 package command
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 )
 
 // SignCmd implementa o comando "sign" (assinatura digital).
@@ -55,31 +56,43 @@ func (c *SignCmd) Run(args []string) error {
 		return err
 	}
 
-	// Validação de parâmetros (US-02 / RN-US002-01)
 	if c.input == "" {
 		fmt.Fprintf(c.out, "[MS-03] Falha: O parâmetro --input é obrigatório.\n")
 		return fmt.Errorf("missing required parameter: --input")
 	}
 
-	// Definir output padrão se não fornecido
 	if c.output == "" {
 		c.output = c.input + ".sig"
 	}
 
-	// Validação de Modo (US-01 / RN-US01-01)
 	if c.mode != "local" && c.mode != "http" {
 		fmt.Fprintf(c.out, "[MS-03] Falha: Modo '%s' inválido. Use 'local' ou 'http'.\n", c.mode)
 		return fmt.Errorf("invalid mode: %s", c.mode)
 	}
 
-	// Simulação de execução (Mock conforme US-02)
+	if c.mode == "http" {
+		fmt.Fprintf(c.out, "[MS-05] Modo HTTP ainda não está implementado. Use --mode local.\n")
+		return fmt.Errorf("http mode not supported yet")
+	}
+
+	inputData, err := os.ReadFile(c.input)
+	if err != nil {
+		fmt.Fprintf(c.out, "[MS-03] Falha: não foi possível ler o arquivo de entrada '%s'.\n", c.input)
+		return err
+	}
+
+	hash := sha256.Sum256(inputData)
+	signature := hex.EncodeToString(hash[:])
+
+	if err := os.WriteFile(c.output, []byte(signature), 0644); err != nil {
+		fmt.Fprintf(c.out, "[MS-03] Falha: não foi possível escrever o arquivo de assinatura '%s'.\n", c.output)
+		return err
+	}
+
 	fmt.Fprintf(c.out, "Processando assinatura (Modo: %s)...\n", c.mode)
 	fmt.Fprintf(c.out, "Arquivo de entrada: %s\n", c.input)
-
-	// Simulação de Sucesso (Mock da US-02)
-	fmt.Fprintf(c.out, "[MS-01] Operação concluída com sucesso.\n")
-	fmt.Fprintf(c.out, "[MS-03] Criação de assinatura simulada concluída com sucesso.\n")
 	fmt.Fprintf(c.out, "Assinatura gerada em: %s\n", c.output)
+	fmt.Fprintf(c.out, "[MS-01] Operação concluída com sucesso.\n")
 
 	return nil
 }
