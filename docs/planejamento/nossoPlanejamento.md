@@ -4,8 +4,8 @@
 
 | Nome | GitHub |
 ---|---|
-|  Marcello Ronald | https://github.com/mronald-js |
-| Amanda Soares  | https://github.com/Amanda23Souza |  |
+| Marcello Ronald | https://github.com/mronald-js |
+| Amanda Soares | https://github.com/Amanda23Souza |  |
 
 ## Requisitos
 
@@ -14,6 +14,8 @@ Funcionais
 | Requisito | Descrição |
 |---|---|
 | [RF-01](https://docs.google.com/document/d/1INuAPolIXwJDsnybkzo76w2qEoZFv5BsP6o_vdRQ974/edit?usp=drive_link) | permitir que o usuário execute comandos de criação e validação de assinatura digital diretamente pela linha de comando (CLI) |
+| [RF-02](https://docs.google.com/document/d/1-3Nqvqi5dKYykk-WcjU61O2R5c0A8TMGrbWR_0DbLz0/edit?tab=t.0) | Simular Assinatura Digital com Validação de Parâmetros |
+| [RF-03]| descricao |
 
 Não funcionais
 
