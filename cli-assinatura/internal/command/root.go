@@ -43,6 +43,11 @@ func (c *RootCmd) Run(args []string) error {
 		return nil
 	}
 
+	// Suporte a opção global de versão
+	if cmdName == "--version" {
+		return c.commands["version"].Run([]string{})
+	}
+
 	// Busca o comando registrado
 	cmd, exists := c.commands[cmdName]
 	if !exists {
