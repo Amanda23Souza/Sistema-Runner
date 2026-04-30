@@ -9,3 +9,5 @@
 //   ./assinatura version
 //   ./assinatura sign --help
 //   ./assinatura validate --help
+
+package main

@@ -77,7 +77,9 @@ func (c *VersionCmd) display() error {
 // outputJSON escreve a versão em formato JSON.
 func (c *VersionCmd) outputJSON() error {
 	data := map[string]string{
-		"version": version.Get(),
+		"version":   version.Get(),
+		"commit":    version.Commit,
+		"buildTime": version.BuildTime,
 	}
 
 	encoder := json.NewEncoder(c.out)
