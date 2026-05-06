@@ -30,7 +30,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: projetos/assinatura
+        working-directory: docs/aulas/projetos/assinatura
 
     steps:
       - name: Checkout Repo
@@ -42,7 +42,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
-          cache-dependency-path: projetos/assinatura/go.sum
+          cache-dependency-path: docs/aulas/projetos/assinatura/go.sum
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
@@ -92,10 +92,10 @@ jobs:
         with:
           name: assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
-            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256*
-            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.pem*
-            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sig*
+            docs/aulas/projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            docs/aulas/projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256*
+            docs/aulas/projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.pem*
+            docs/aulas/projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sig*
           retention-days: 7
 
       - name: Upload to GitHub Release & Auto Tag
