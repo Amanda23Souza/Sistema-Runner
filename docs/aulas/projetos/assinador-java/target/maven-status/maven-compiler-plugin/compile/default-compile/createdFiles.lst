@@ -1,0 +1,5 @@
+com\kyriosdata\assinador\domain\ValidateRequest.class
+com\kyriosdata\assinador\domain\SignatureResponse.class
+com\kyriosdata\assinador\SignatureService.class
+com\kyriosdata\assinador\FakeSignatureService.class
+com\kyriosdata\assinador\domain\SignRequest.class

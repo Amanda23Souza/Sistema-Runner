@@ -1,0 +1,112 @@
+name: CI & Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
+jobs:
+  build:
+    name: Build Multi-plataforma
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            ext: ""
+          - goos: windows
+            goarch: amd64
+            ext: ".exe"
+          - goos: darwin
+            goarch: amd64
+            ext: ""
+
+    defaults:
+      run:
+        working-directory: projetos/assinatura
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: projetos/assinatura/go.sum
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      - name: Download Dependencies
+        run: go mod download
+
+      - name: Extract Version
+        id: version
+        shell: bash
+        run: |
+          # Extrai a versão a partir do código Go
+          RAW_VERSION=$(grep -oP 'var version = "\K[^"]+' cmd/version.go)
+          VERSION="v$RAW_VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          # Verifica se a tag já existe no repositório
+          if git ls-remote --tags origin | grep -q "refs/tags/$VERSION"; then
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -v -o assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} .
+
+      - name: Checksum and Sign Artifacts
+        if: env.TAG_EXISTS == 'false'
+        shell: bash
+        run: |
+          FILE="assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          
+          # 1. Gerar SHA256
+          sha256sum "$FILE" > "$FILE.sha256"
+          
+          # 2. Assinar artefato com Cosign (keyless/OIDC) gerando .sig e .pem
+          cosign sign-blob --yes \
+            --output-certificate "$FILE.pem" \
+            --output-signature "$FILE.sig" \
+            "$FILE"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256*
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.pem*
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sig*
+          retention-days: 7
+
+      - name: Upload to GitHub Release & Auto Tag
+        uses: softprops/action-gh-release@v2
+        if: env.TAG_EXISTS == 'false'
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
+          generate_release_notes: true
+          files: |
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.pem
+            projetos/assinatura/assinatura-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sig

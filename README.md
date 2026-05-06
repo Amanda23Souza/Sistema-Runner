@@ -4,6 +4,13 @@ Repositório dedicado para desenvolvimento do **projeto Runner**, da disciplina 
 
 O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facilita operações de assinatura digital através da linha de comando, sem necessidade de conhecimento aprofundado em configurações Java.
 
+### Arquivos designados pelo professor:
+
+- [Especificação](docs/aulas/especificacao.md)
+- [Design](docs/design.md)
+- [Plano de implementação](docs/aulas/plano-revisitado-v2.md)
+- [Sprint 1](docs/aulas/sprint-1-tasks.md)
+
 ### [📌 Nosso planejamento](https://github.com/Amanda23Souza/Sistema-Runner/blob/main/docs/planejamento/nossoPlanejamento.md)
 
 
