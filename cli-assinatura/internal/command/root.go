@@ -23,7 +23,9 @@ func NewRootCmd() *RootCmd {
 	// Registra os comandos disponíveis
 	root.commands["version"] = NewVersionCmd()
 	root.commands["sign"] = NewSignCmd()
+	root.commands["criar"] = root.commands["sign"]
 	root.commands["validate"] = NewValidateCmd()
+	root.commands["validar"] = root.commands["validate"]
 
 	return root
 }
@@ -67,9 +69,9 @@ func (c *RootCmd) Help() string {
 Usage: assinatura <command> [OPTIONS]
 
 Commands:
-  version      Display the version of assinatura CLI
-  sign         Create a digital signature for a file
-  validate     Validate a digital signature
+  version           Display the version of assinatura CLI
+  sign/criar        Create a digital signature for a file
+  validate/validar   Validate a digital signature
 
 Global Options:
   --help       Show this help message
@@ -78,7 +80,9 @@ Global Options:
 Examples:
   assinatura version
   assinatura sign --input document.pdf
+	assinatura criar --input document.pdf --mode http
   assinatura validate --input document.pdf --signature document.sig
+	assinatura validar --input document.pdf --signature document.sig --json
 
 Use 'assinatura <command> --help' for more information about a command.`
 }

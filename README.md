@@ -56,6 +56,8 @@ go build -o assinatura ./cmd/assinatura
 
 ## 💻 Como Usar
 
+O CLI atual aceita os comandos principais `sign` e `validate`, e também os aliases `criar` e `validar` para manter compatibilidade com o requisito funcional.
+
 ### Comando `version`
 
 Exibe a versão do assinatura CLI:
@@ -86,6 +88,17 @@ Exibe a versão do assinatura CLI:
 ./assinatura --help
 # ou
 ./assinatura
+
+### Comandos de Simulação
+
+```bash
+./assinatura sign --input document.pdf --output document.sig --json
+./assinatura criar --input document.pdf --mode http
+./assinatura validate --input document.pdf --signature document.sig --json
+./assinatura validar --input document.pdf --signature document.sig --mode http
+```
+
+O modo `http` está implementado como simulação interna, sem rede externa, para manter o fluxo previsível enquanto a integração real não entra.
 ```
 
 ---

@@ -3,6 +3,7 @@ package command
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -11,10 +12,21 @@ import (
 
 // SignCmd implementa o comando "sign" (assinatura digital).
 type SignCmd struct {
-	out    io.Writer
-	input  string
-	output string
-	mode   string
+	out        io.Writer
+	input      string
+	output     string
+	mode       string
+	formatJSON bool
+}
+
+type signResult struct {
+	Operation string `json:"operation"`
+	Mode      string `json:"mode"`
+	Input     string `json:"input"`
+	Output    string `json:"output"`
+	Signature string `json:"signature"`
+	Execution string `json:"execution"`
+	Status    string `json:"status"`
 }
 
 // NewSignCmd cria uma nova instância do comando de assinatura.
@@ -34,10 +46,11 @@ Options:
   --input FILE      Path to the file to sign (required)
   --output FILE     Path to save the signature (default: <input>.sig)
   --mode MODE       Invocation mode: 'local' or 'http' (default: 'local')
+	--json            Output a structured JSON summary
   --help            Show this help message
 
 Example:
-  assinatura sign --input document.pdf --output document.sig`
+	assinatura sign --input document.pdf --output document.sig --json`
 }
 
 // Run executa o comando de assinatura.
@@ -48,6 +61,7 @@ func (c *SignCmd) Run(args []string) error {
 	fs.StringVar(&c.input, "input", "", "Path to the file to sign")
 	fs.StringVar(&c.output, "output", "", "Path to save the signature")
 	fs.StringVar(&c.mode, "mode", "local", "Invocation mode: 'local' or 'http'")
+	fs.BoolVar(&c.formatJSON, "json", false, "Output a structured JSON summary")
 
 	err := fs.Parse(args)
 	if err != nil {
@@ -57,7 +71,7 @@ func (c *SignCmd) Run(args []string) error {
 	}
 
 	if c.input == "" {
-		fmt.Fprintf(c.out, "[MS-03] Falha: O parâmetro --input é obrigatório.\n")
+		fmt.Fprintf(c.out, "Erro de validação: o campo --input é obrigatório.\n")
 		return fmt.Errorf("missing required parameter: --input")
 	}
 
@@ -66,18 +80,13 @@ func (c *SignCmd) Run(args []string) error {
 	}
 
 	if c.mode != "local" && c.mode != "http" {
-		fmt.Fprintf(c.out, "[MS-03] Falha: Modo '%s' inválido. Use 'local' ou 'http'.\n", c.mode)
+		fmt.Fprintf(c.out, "Erro de validação: o campo --mode deve ser 'local' ou 'http' (valor recebido: %q).\n", c.mode)
 		return fmt.Errorf("invalid mode: %s", c.mode)
-	}
-
-	if c.mode == "http" {
-		fmt.Fprintf(c.out, "[MS-05] Modo HTTP ainda não está implementado. Use --mode local.\n")
-		return fmt.Errorf("http mode not supported yet")
 	}
 
 	inputData, err := os.ReadFile(c.input)
 	if err != nil {
-		fmt.Fprintf(c.out, "[MS-03] Falha: não foi possível ler o arquivo de entrada '%s'.\n", c.input)
+		fmt.Fprintf(c.out, "Erro de validação: não foi possível ler o arquivo de entrada %q.\n", c.input)
 		return err
 	}
 
@@ -85,14 +94,37 @@ func (c *SignCmd) Run(args []string) error {
 	signature := hex.EncodeToString(hash[:])
 
 	if err := os.WriteFile(c.output, []byte(signature), 0644); err != nil {
-		fmt.Fprintf(c.out, "[MS-03] Falha: não foi possível escrever o arquivo de assinatura '%s'.\n", c.output)
+		fmt.Fprintf(c.out, "Erro de validação: não foi possível escrever o arquivo de saída %q.\n", c.output)
 		return err
 	}
 
-	fmt.Fprintf(c.out, "Processando assinatura (Modo: %s)...\n", c.mode)
+	execution := "simulação local"
+	if c.mode == "http" {
+		execution = "simulação HTTP interna"
+	}
+
+	fmt.Fprintf(c.out, "Processando assinatura (%s)...\n", execution)
 	fmt.Fprintf(c.out, "Arquivo de entrada: %s\n", c.input)
 	fmt.Fprintf(c.out, "Assinatura gerada em: %s\n", c.output)
-	fmt.Fprintf(c.out, "[MS-01] Operação concluída com sucesso.\n")
+	fmt.Fprintf(c.out, "Resultado: assinatura simulada com sucesso.\n")
+
+	if c.formatJSON {
+		return c.outputJSON(signResult{
+			Operation: "sign",
+			Mode:      c.mode,
+			Input:     c.input,
+			Output:    c.output,
+			Signature: signature,
+			Execution: execution,
+			Status:    "success",
+		})
+	}
 
 	return nil
+}
+
+func (c *SignCmd) outputJSON(result signResult) error {
+	encoder := json.NewEncoder(c.out)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(result)
 }

@@ -4,6 +4,8 @@
 
 Garantir validacao rigorosa de parametros antes de simular criacao ou validacao de assinatura digital.
 
+O CLI `assinatura` aceita os comandos `sign` e `validate`, com os aliases `criar` e `validar`, respectivamente.
+
 ## Atores
 
 - Usuario
@@ -23,11 +25,11 @@ Garantir validacao rigorosa de parametros antes de simular criacao ou validacao 
 
 ## Fluxo Principal (Caminho Feliz)
 
-1. `assinador.jar` recebe operacao (`criar` ou `validar`) e parametros.
+1. CLI `assinatura` recebe operacao (`sign`/`criar` ou `validate`/`validar`) e parametros.
 2. Sistema valida obrigatoriedade, formato e consistencia dos parametros.
-3. Para `criar`, sistema produz assinatura simulada pre-construida.
-4. Para `validar`, sistema produz resultado pre-determinado conforme regra definida.
-5. Sistema retorna resposta estruturada ao CLI.
+3. Para `sign`/`criar`, sistema produz assinatura simulada a partir do conteudo de entrada.
+4. Para `validate`/`validar`, sistema compara o valor simulado e produz o resultado pre-determinado conforme regra definida.
+5. Sistema retorna resposta textual e, quando solicitado, resposta estruturada em JSON ao CLI.
 
 ## Fluxos Alternativos
 
@@ -43,6 +45,12 @@ Garantir validacao rigorosa de parametros antes de simular criacao ou validacao 
 2. Sistema retorna erro tecnico controlado.
 3. Nao deve haver travamento do processo.
 
+### FA-02.1 - Simulacao HTTP interna indisponivel
+
+1. Durante o modo `http`, a simulacao interna nao consegue concluir o fluxo.
+2. Sistema retorna erro tecnico controlado.
+3. Nao deve haver travamento do processo.
+
 ### FA-03 - Operacao desconhecida
 
 1. No passo 1, operacao diferente de `criar`/`validar`.
@@ -54,6 +62,8 @@ Garantir validacao rigorosa de parametros antes de simular criacao ou validacao 
 - RN-US02-02: Erros devem indicar claramente qual campo falhou e regra violada.
 - RN-US02-03: Integracao PKCS#11 deve ser opcional no ambiente de simulacao, mas com tratamento de falhas.
 - RN-US02-04: O sistema deve aplicar `RNP-01`, `RNP-02` e `RNP-04`.
+- RN-US02-05: O modo `http` pode ser simulado internamente enquanto a integracao real nao estiver disponivel.
+- RN-US02-06: A resposta da simulacao deve estar disponivel em texto e opcionalmente em JSON estruturado.
 
 ## Criterios de Aceitacao
 
@@ -61,6 +71,8 @@ Garantir validacao rigorosa de parametros antes de simular criacao ou validacao 
 - Criacao de assinatura retorna payload simulado quando valido.
 - Validacao retorna resultado pre-determinado quando valido.
 - Erros invalidos sao claros e verificaveis.
+- Comandos `sign`/`criar` e `validate`/`validar` sao aceitos pela mesma base de fluxo.
+- O modo `http` retorna o mesmo resultado logico com simulacao interna.
 
 ## Rastreabilidade
 
