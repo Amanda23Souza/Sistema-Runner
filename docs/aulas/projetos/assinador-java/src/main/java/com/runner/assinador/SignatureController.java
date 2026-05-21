@@ -1,8 +1,8 @@
-package com.kyriosdata.assinador;
+package com.runner.assinador;
 
-import com.kyriosdata.assinador.domain.SignRequest;
-import com.kyriosdata.assinador.domain.SignatureResponse;
-import com.kyriosdata.assinador.domain.ValidateRequest;
+import com.runner.assinador.domain.SignRequest;
+import com.runner.assinador.domain.SignatureResponse;
+import com.runner.assinador.domain.ValidateRequest;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 

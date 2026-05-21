@@ -1,4 +1,4 @@
-package com.kyriosdata.assinador.domain;
+package com.runner.assinador.domain;
 
 /**
  * Representa os dados da requisição para operação real de criação de assinatura digital.

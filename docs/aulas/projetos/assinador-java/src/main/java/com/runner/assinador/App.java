@@ -1,4 +1,4 @@
-package com.kyriosdata.assinador;
+package com.runner.assinador;
 
 import io.javalin.Javalin;
 
@@ -18,6 +18,7 @@ public class App {
         SignatureController controller = new SignatureController(signatureService);
 
         Javalin app = Javalin.create()
+            .get("/health", ctx -> ctx.status(200).json(java.util.Map.of("status", "UP")))
             .post("/sign", controller::sign)
             .post("/validate", controller::validate)
             .start(port);

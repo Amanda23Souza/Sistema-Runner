@@ -1,8 +1,8 @@
-package com.kyriosdata.assinador;
+package com.runner.assinador;
 
-import com.kyriosdata.assinador.domain.SignRequest;
-import com.kyriosdata.assinador.domain.ValidateRequest;
-import com.kyriosdata.assinador.domain.SignatureResponse;
+import com.runner.assinador.domain.SignRequest;
+import com.runner.assinador.domain.ValidateRequest;
+import com.runner.assinador.domain.SignatureResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

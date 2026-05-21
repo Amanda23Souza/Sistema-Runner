@@ -1,9 +1,9 @@
-package com.kyriosdata.assinador;
+package com.runner.assinador;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kyriosdata.assinador.domain.SignRequest;
-import com.kyriosdata.assinador.domain.SignatureResponse;
-import com.kyriosdata.assinador.domain.ValidateRequest;
+import com.runner.assinador.domain.SignRequest;
+import com.runner.assinador.domain.SignatureResponse;
+import com.runner.assinador.domain.ValidateRequest;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +31,7 @@ class SignatureControllerTest {
         SignatureController controller = new SignatureController(signatureService);
 
         app = Javalin.create()
+            .get("/health", ctx -> ctx.status(200).json(java.util.Map.of("status", "UP")))
             .post("/sign", controller::sign)
             .post("/validate", controller::validate)
             .start(0); // Random available port
@@ -129,5 +130,18 @@ class SignatureControllerTest {
         SignatureResponse res = mapper.readValue(response.body(), SignatureResponse.class);
         assertFalse(res.isValid());
         assertEquals("Parâmetro 'content' inválido ou ausente", res.getMessage());
+    }
+
+    @Test
+    void testHealthCheckSuccess() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("http://localhost:" + port + "/health"))
+            .GET()
+            .build();
+            
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        
+        assertEquals(200, response.statusCode());
+        assertTrue(response.body().contains("\"status\":\"UP\""));
     }
 }
