@@ -1,4 +1,4 @@
-package com.kyriosdata.assinador.domain;
+package com.runner.assinador.domain;
 
 public class SignatureResponse {
     private String signature;
