@@ -1,12 +1,11 @@
 package command
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -14,10 +13,13 @@ import (
 // ValidateCmd implementa o comando "validate" (validação de assinatura).
 type ValidateCmd struct {
 	out        io.Writer
+	errOut     io.Writer
 	input      string
 	signature  string
 	mode       string
+	port       int
 	formatJSON bool
+	verbose    bool
 }
 
 type validateResult struct {
@@ -33,7 +35,8 @@ type validateResult struct {
 // NewValidateCmd cria uma nova instância do comando de validação.
 func NewValidateCmd() *ValidateCmd {
 	return &ValidateCmd{
-		out: os.Stdout,
+		out:    os.Stdout,
+		errOut: os.Stderr,
 	}
 }
 
@@ -41,17 +44,24 @@ func NewValidateCmd() *ValidateCmd {
 func (c *ValidateCmd) Help() string {
 	return `Usage: assinatura validate [OPTIONS]
 
-Validate a digital signature for a file.
+Valida a assinatura digital de um arquivo.
+
+O modo padrão é 'http': o CLI se comunica com o assinador.jar em execução.
+Para validar localmente (sem servidor), use --mode local.
 
 Options:
-  --input FILE      Path to the file to validate (required)
-  --signature FILE  Path to the signature file (required)
-  --mode MODE       Invocation mode: 'local' or 'http' (default: 'local')
-	--json            Output a structured JSON summary
-  --help            Show this help message
+  --input FILE      Caminho do arquivo a ser validado (obrigatório)
+  --signature FILE  Caminho do arquivo de assinatura (obrigatório)
+  --mode MODE       Modo de invocação: 'http' (padrão) ou 'local'
+  --port PORT       Porta do servidor assinador em modo http (padrão: 8080)
+  --json            Saída em formato JSON estruturado
+  --verbose         Habilita saída detalhada
+  --help            Exibe esta mensagem de ajuda
 
-Example:
-	assinatura validate --input document.pdf --signature document.sig --json`
+Examples:
+  assinatura validate --input documento.pdf --signature documento.sig
+  assinatura validar --input documento.pdf --signature documento.sig --json
+  assinatura validate --input documento.pdf --signature documento.sig --mode local`
 }
 
 // Run executa o comando de validação.
@@ -59,94 +69,143 @@ func (c *ValidateCmd) Run(args []string) error {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 
-	fs.StringVar(&c.input, "input", "", "Path to the file to validate")
-	fs.StringVar(&c.signature, "signature", "", "Path to the signature file")
-	fs.StringVar(&c.mode, "mode", "local", "Invocation mode: 'local' or 'http'")
-	fs.BoolVar(&c.formatJSON, "json", false, "Output a structured JSON summary")
+	fs.StringVar(&c.input, "input", "", "Caminho do arquivo a ser validado")
+	fs.StringVar(&c.signature, "signature", "", "Caminho do arquivo de assinatura")
+	fs.StringVar(&c.mode, "mode", "http", "Modo de invocação: 'http' (padrão) ou 'local'")
+	fs.IntVar(&c.port, "port", 8080, "Porta do servidor assinador (modo http)")
+	fs.BoolVar(&c.formatJSON, "json", false, "Saída em formato JSON estruturado")
+	fs.BoolVar(&c.verbose, "verbose", false, "Habilita saída detalhada")
 
-	err := fs.Parse(args)
-	if err != nil {
-		fmt.Fprintf(c.out, "[MS-03] Falha: Parâmetro obrigatório ausente ou sintaxe de comando inválida.\n")
-		fmt.Fprintln(c.out, c.Help())
-		return err
+	for _, arg := range args {
+		if arg == "--help" || arg == "-h" {
+			fmt.Fprintln(c.out, c.Help())
+			return nil
+		}
 	}
 
-	if c.input == "" || c.signature == "" {
-		if c.input == "" {
-			fmt.Fprintf(c.out, "Erro de validação: o campo --input é obrigatório.\n")
-		}
-		if c.signature == "" {
-			fmt.Fprintf(c.out, "Erro de validação: o campo --signature é obrigatório.\n")
-		}
-		return fmt.Errorf("missing required parameters")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(c.errOut, "[MS-03] Erro do usuário: parâmetro inválido ou sintaxe incorreta.\n")
+		fmt.Fprintln(c.errOut, c.Help())
+		return &UserError{msg: "sintaxe de comando inválida"}
+	}
+
+	if c.input == "" {
+		fmt.Fprintf(c.errOut, "Erro do usuário: o parâmetro --input é obrigatório.\n")
+		fmt.Fprintf(c.errOut, "Dica: assinatura validate --input <arquivo> --signature <arquivo.sig>\n")
+		return &UserError{msg: "parâmetro obrigatório ausente: --input"}
+	}
+	if c.signature == "" {
+		fmt.Fprintf(c.errOut, "Erro do usuário: o parâmetro --signature é obrigatório.\n")
+		fmt.Fprintf(c.errOut, "Dica: assinatura validate --input <arquivo> --signature <arquivo.sig>\n")
+		return &UserError{msg: "parâmetro obrigatório ausente: --signature"}
 	}
 
 	if c.mode != "local" && c.mode != "http" {
-		fmt.Fprintf(c.out, "Erro de validação: o campo --mode deve ser 'local' ou 'http' (valor recebido: %q).\n", c.mode)
-		return fmt.Errorf("invalid mode: %s", c.mode)
+		fmt.Fprintf(c.errOut, "Erro do usuário: --mode deve ser 'http' ou 'local' (recebido: %q).\n", c.mode)
+		return &UserError{msg: fmt.Sprintf("modo inválido: %s", c.mode)}
 	}
 
+	if c.verbose {
+		slog.Info("iniciando validação", "input", c.input, "signature", c.signature, "mode", c.mode)
+	}
+
+	if c.mode == "http" {
+		return c.runHTTP()
+	}
+	return c.runLocal()
+}
+
+// runHTTP valida via servidor HTTP.
+func (c *ValidateCmd) runHTTP() error {
+	sigData, err := os.ReadFile(c.signature)
+	if err != nil {
+		fmt.Fprintf(c.errOut, "Erro do sistema: não foi possível ler o arquivo de assinatura %q.\n", c.signature)
+		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
+		slog.Error("falha ao ler arquivo de assinatura", "signature", c.signature, "erro", err)
+		return fmt.Errorf("falha ao ler arquivo de assinatura: %w", err)
+	}
+
+	url := fmt.Sprintf("http://localhost:%d/validate", c.port)
+	body := fmt.Sprintf(`{"content": "%s", "signature": "%s"}`,
+		strings.ReplaceAll(c.input, `"`, `\"`),
+		strings.ReplaceAll(strings.TrimSpace(string(sigData)), `"`, `\"`),
+	)
+
+	if c.verbose {
+		slog.Info("enviando requisição HTTP", "url", url)
+	}
+
+	resp, err := httpPost(url, body)
+	if err != nil {
+		fmt.Fprintf(c.errOut, "Erro do sistema: falha ao conectar ao servidor assinador em localhost:%d.\n", c.port)
+		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
+		fmt.Fprintf(c.errOut, "Como resolver: verifique se o servidor está rodando com 'assinatura start --port %d'.\n", c.port)
+		slog.Error("falha na conexão HTTP", "url", url, "erro", err)
+		return fmt.Errorf("falha na conexão com o servidor: %w", err)
+	}
+
+	valid, _ := resp["valid"].(bool)
+	return c.printValidationResult(valid, "http")
+}
+
+// runLocal valida localmente (SHA-256 simulado).
+func (c *ValidateCmd) runLocal() error {
 	inputData, err := os.ReadFile(c.input)
 	if err != nil {
-		fmt.Fprintf(c.out, "Erro de validação: não foi possível ler o arquivo de entrada %q.\n", c.input)
-		return err
+		fmt.Fprintf(c.errOut, "Erro do sistema: não foi possível ler o arquivo de entrada %q.\n", c.input)
+		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
+		fmt.Fprintf(c.errOut, "Como resolver: verifique se o arquivo existe e se você tem permissão de leitura.\n")
+		slog.Error("falha ao ler arquivo de entrada", "input", c.input, "erro", err)
+		return fmt.Errorf("falha ao ler arquivo de entrada: %w", err)
 	}
 
 	sigData, err := os.ReadFile(c.signature)
 	if err != nil {
-		fmt.Fprintf(c.out, "Erro de validação: não foi possível ler o arquivo de assinatura %q.\n", c.signature)
-		return err
+		fmt.Fprintf(c.errOut, "Erro do sistema: não foi possível ler o arquivo de assinatura %q.\n", c.signature)
+		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
+		slog.Error("falha ao ler arquivo de assinatura", "signature", c.signature, "erro", err)
+		return fmt.Errorf("falha ao ler arquivo de assinatura: %w", err)
 	}
 
-	sigText := strings.TrimSpace(string(sigData))
-	sigBytes, err := hex.DecodeString(sigText)
-	if err != nil {
-		fmt.Fprintf(c.out, "Erro de validação: o arquivo de assinatura %q não está em formato hexadecimal válido.\n", c.signature)
-		return err
-	}
+	expected := computeSHA256(inputData)
+	actual := strings.TrimSpace(string(sigData))
+	valid := expected == actual
 
-	hash := sha256.Sum256(inputData)
-	execution := "simulação local"
-	if c.mode == "http" {
-		execution = "simulação HTTP interna"
-	}
+	return c.printValidationResult(valid, "local")
+}
 
-	fmt.Fprintf(c.out, "Validando assinatura (%s)...\n", execution)
+func (c *ValidateCmd) printValidationResult(valid bool, mode string) error {
+	fmt.Fprintf(c.out, "Validação concluída (modo %s).\n", mode)
 	fmt.Fprintf(c.out, "Arquivo de entrada: %s\n", c.input)
 	fmt.Fprintf(c.out, "Arquivo de assinatura: %s\n", c.signature)
 
-	if !equalBytes(hash[:], sigBytes) {
-		fmt.Fprintf(c.out, "Resultado: assinatura inválida.\n")
+	if valid {
+		fmt.Fprintf(c.out, "Resultado: assinatura VÁLIDA.\n")
+		fmt.Fprintf(c.out, "Status: VÁLIDA\n")
+	} else {
+		fmt.Fprintf(c.out, "Resultado: assinatura INVÁLIDA.\n")
 		fmt.Fprintf(c.out, "Status: INVÁLIDA\n")
-		if c.formatJSON {
-			return c.outputJSON(validateResult{
-				Operation: "validate",
-				Mode:      c.mode,
-				Input:     c.input,
-				Signature: c.signature,
-				Execution: execution,
-				Status:    "invalid",
-				Valid:     false,
-			})
-		}
-		return fmt.Errorf("signature invalid")
 	}
 
-	fmt.Fprintf(c.out, "Resultado: assinatura válida.\n")
-	fmt.Fprintf(c.out, "Status: VÁLIDA\n")
-
 	if c.formatJSON {
+		status := "valid"
+		if !valid {
+			status = "invalid"
+		}
 		return c.outputJSON(validateResult{
 			Operation: "validate",
-			Mode:      c.mode,
+			Mode:      mode,
 			Input:     c.input,
 			Signature: c.signature,
-			Execution: execution,
-			Status:    "valid",
-			Valid:     true,
+			Execution: fmt.Sprintf("modo %s", mode),
+			Status:    status,
+			Valid:      valid,
 		})
 	}
 
+	if !valid {
+		return fmt.Errorf("assinatura inválida")
+	}
 	return nil
 }
 
@@ -154,16 +213,4 @@ func (c *ValidateCmd) outputJSON(result validateResult) error {
 	encoder := json.NewEncoder(c.out)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(result)
-}
-
-func equalBytes(a, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }

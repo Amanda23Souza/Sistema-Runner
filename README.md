@@ -1,168 +1,239 @@
 # Sistema-Runner
 
-Repositório dedicado para desenvolvimento do **projeto Runner**, da disciplina **Implementação e Integração de Software** (UFG).
+Repositório dedicado ao desenvolvimento do **projeto Runner**, da disciplina **Implementação e Integração de Software** (UFG).
 
-O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facilita operações de assinatura digital através da linha de comando, sem necessidade de conhecimento aprofundado em configurações Java.
+O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facilita operações de assinatura digital através da linha de comando, delegando a lógica criptográfica ao `assinador.jar` — um servidor HTTP leve escrito em Java.
 
-### Arquivos designados pelo professor:
-
-- [Especificação](docs/aulas/especificacao.md)
-- [Design](docs/design.md)
-- [Plano de implementação](docs/aulas/plano-revisitado-v2.md)
-- [Sprint 1](docs/aulas/sprint-1-tasks.md)
-
-### [📌 Nosso planejamento](https://github.com/Amanda23Souza/Sistema-Runner/blob/main/docs/planejamento/nossoPlanejamento.md)
-
+**Especificação de referência:**
+[`kyriosdata/runner @ d3f1a9c`](https://github.com/kyriosdata/runner/blob/d3f1a9c/docs/runner.md) *(link fixo — não usa `main` para evitar deriva)*
 
 ---
 
 ## 📋 Requisitos
 
-- **Go 1.26.1+** (ou superior)
-- **JDK** instalado (para operações de assinatura digital com `assinador.jar`)
+| Ferramenta | Versão Mínima | Verificação |
+|------------|:---:|---|
+| Go | 1.26.1+ | `go version` |
+| JDK | 21+ | `java --version` |
+| Maven | 3.8+ | `mvn --version` *(apenas para compilar o JAR)* |
 
 ---
 
 ## 📁 Estrutura do Projeto
 
-O repositório é composto por dois subprojetos principais:
-
-1. **`cli-assinatura/`**: A interface de linha de comandos (CLI) escrita em Go (1.25).
-2. **`docs/aulas/projetos/assinador-java/`**: O backend do assinador executável escrito em Java 21, responsável pelas validações de parâmetros e simulação de assinaturas, agora integrável via HTTP e local.
-
 ```
 .
 ├── cli-assinatura/              ← Subprojeto CLI (Go)
 │   ├── cmd/assinatura/
-│   │   └── main.go              ← Ponto de entrada (executável)
+│   │   └── main.go              ← Ponto de entrada (exit codes distintos: 1=sistema, 2=usuário)
 │   ├── internal/
 │   │   ├── command/
-│   │   │   ├── root.go           ← Parser e orquestrador
-│   │   │   ├── version.go        ← Comando de versão
-│   │   │   ├── sign.go           ← Comando de assinatura (stub)
-│   │   │   └── validate.go       ← Comando de validação (stub)
+│   │   │   ├── root.go          ← Orquestrador de subcomandos
+│   │   │   ├── sign.go          ← Comando sign/criar (modo http padrão)
+│   │   │   ├── validate.go      ← Comando validate/validar
+│   │   │   ├── start.go         ← Comando start (health check idempotente)
+│   │   │   ├── stop.go          ← Comando stop + status
+│   │   │   ├── version.go       ← Comando version (tag + SHA curto)
+│   │   │   ├── http.go          ← Cliente HTTP com timeout e tratamento de erros
+│   │   │   ├── errors.go        ← UserError vs SystemError
+│   │   │   └── util.go          ← Utilitários (SHA-256)
 │   │   └── version/
-│   └── go.mod                   ← Definição de módulo Go
-└── docs/aulas/projetos/
-    └── assinador-java/          ← Subprojeto Assinador (Java)
-        ├── src/
-        │   ├── main/java/com/runner/assinador/
-        │   │   ├── App.java                   ← Classe Main (servidor Javalin)
-        │   │   ├── SignatureController.java    ← Rotas /sign, /validate e /health
-        │   │   ├── SignatureService.java       ← Interface do serviço
-        │   │   ├── FakeSignatureService.java   ← Simulação e validação
-        │   │   └── domain/                    ← DTOs de Request/Response
-        │   └── test/                          ← Testes unitários e de integração
-        └── pom.xml                            ← Definição Maven (Javalin, Jackson)
+│   │       └── version.go       ← Metadados de versão (injetados via ldflags)
+│   └── go.mod
+├── docs/aulas/projetos/assinador-java/  ← Subprojeto Assinador (Java)
+│   ├── src/main/java/com/runner/assinador/
+│   │   ├── App.java             ← Servidor Javalin (auto-shutdown, /shutdown endpoint)
+│   │   ├── SignatureController.java
+│   │   ├── SignatureService.java
+│   │   └── FakeSignatureService.java
+│   └── pom.xml
+├── docs/
+│   ├── adr/                     ← Architecture Decision Records
+│   │   ├── 001-escolha-go-para-cli.md
+│   │   ├── 002-modo-servidor-http-padrao.md
+│   │   └── 003-parser-cli-stdlib-flag.md
+│   ├── design.md                ← Diagramas C4 (contexto e contêineres)
+│   └── planejamento/
+│       └── nossoPlanejamento.md
+├── .gitignore
+├── .gitattributes
+└── LICENSE                      ← Apache 2.0
 ```
 
 ---
 
-## 🚀 Como Compilar e Executar
+## 🚀 Como Compilar
 
-### 1. CLI (Go)
+### CLI (Go)
 ```bash
 cd cli-assinatura
 go build -o assinatura ./cmd/assinatura
 ```
 
-### 2. Assinador (Java)
-Para compilar e empacotar o executável do servidor Java (gerando o *fat JAR* com as dependências do Javalin embutidas):
+### Assinador JAR (Java)
 ```bash
 cd docs/aulas/projetos/assinador-java
 mvn clean package
-```
-
-Para rodar o servidor em uma porta customizada (ex: `8080`):
-```bash
-java -jar target/assinador-java-1.0.0-SNAPSHOT-jar-with-dependencies.jar 8080
+# Gera: target/assinador-java-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ---
 
 ## 💻 Como Usar
 
-### CLI (Go)
-O CLI atual aceita os comandos principais `sign` e `validate`, e também os aliases `criar` e `validar`.
+O modo padrão é **HTTP** — o CLI se comunica com o servidor assinador em background.
+
+### Fluxo recomendado
 
 ```bash
-# Modo de ajuda geral
-./assinatura --help
+# 1. Iniciar o servidor assinador (verifica saúde, não duplica instâncias)
+./assinatura start
 
-# Exibir versão do CLI
-./assinatura version
-./assinatura version --json
+# 2. Assinar um arquivo
+./assinatura sign --input documento.pdf
+
+# 3. Validar uma assinatura
+./assinatura validate --input documento.pdf --signature documento.pdf.sig
+
+# 4. Verificar status do servidor
+./assinatura status
+
+# 5. Encerrar o servidor
+./assinatura stop
 ```
 
-### Assinador HTTP Server (Java)
-O servidor HTTP aceita requisições JSON em três endpoints configurados:
+### Modo local (sem servidor)
 
-*   **`GET /health`**: Endpoint de monitoramento de saúde do processo.
-    ```bash
-    curl -i http://localhost:8080/health
-    # Retorna: {"status":"UP"} com HTTP 200
-    ```
-*   **`POST /sign`**: Criação de assinatura simulada.
-    ```bash
-    curl -X POST http://localhost:8080/sign \
-      -H "Content-Type: application/json" \
-      -d '{"content": "meu_conteudo"}'
-    ```
-*   **`POST /validate`**: Validação de assinatura.
-    ```bash
-    curl -X POST http://localhost:8080/validate \
-      -H "Content-Type: application/json" \
-      -d '{"content": "meu_conteudo", "signature": "MOCKED_SIGNATURE_BASE64_=="}'
-    ```
+```bash
+./assinatura sign --input documento.pdf --mode local
+./assinatura validate --input documento.pdf --signature documento.sig --mode local
+```
+
+### Opções globais
+
+```bash
+./assinatura --help      # Ajuda com exemplos
+./assinatura --version   # Exibe versão + commit + buildtime
+./assinatura version --json   # Versão em JSON estruturado
+./assinatura version --quiet  # Apenas o número de versão
+```
+
+### Servidor com porta personalizada
+
+```bash
+./assinatura start --port 9090
+./assinatura sign --input doc.pdf --port 9090
+./assinatura stop --port 9090
+```
+
+### Servidor com auto-shutdown configurável
+
+```bash
+# O JAR pode ser iniciado diretamente com timeout de inatividade em segundos
+java -jar assinador-java-1.0.0-SNAPSHOT-jar-with-dependencies.jar 8080 --inactivity-timeout 600
+```
+
+---
+
+## 🧪 Como Executar os Testes
+
+### Testes unitários da CLI (Go)
+
+```bash
+cd cli-assinatura
+go test ./...
+```
+
+### Com cobertura de código
+
+```bash
+cd cli-assinatura
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out   # abre relatório no browser
+```
+
+### Testes com race detector
+
+```bash
+cd cli-assinatura
+go test -race ./...
+```
+
+### Testes do Assinador Java
+
+```bash
+cd docs/aulas/projetos/assinador-java
+mvn test
+```
+
+---
+
+## 🤝 Como Contribuir
+
+1. **Fork** o repositório e crie uma branch: `git checkout -b feat/minha-feature`
+2. **Commits** no padrão [Conventional Commits](https://www.conventionalcommits.org/): `feat(cli): adicionar comando start`
+3. **Testes**: garanta que `go test ./...` passa sem erros
+4. **Lint**: execute `golangci-lint run` antes de abrir PR
+5. **PR**: abra um Pull Request com descrição clara; aguarde revisão do outro membro
+
+### Convenções de código
+
+- Go: `gofmt`, `go vet`, `golangci-lint`
+- Java: estilo padrão com `maven-checkstyle-plugin`
+- Commits: `type(scope): descrição` — tipos: `feat`, `fix`, `docs`, `test`, `refactor`, `ci`, `chore`
+- Mensagens de erro CLI: sempre em português, com **o quê**, **por quê** e **como resolver**
+
+### Códigos de saída
+
+| Código | Significado |
+|:---:|---|
+| `0` | Sucesso |
+| `1` | Erro do sistema (I/O, rede, processo) |
+| `2` | Erro do usuário (parâmetro inválido, arquivo não encontrado pelo usuário) |
 
 ---
 
 ## 📊 Status de Implementação
 
-### ✅ Fase 1 - Estrutura Base (Completo)
-- ✓ Estrutura de pacotes conforme padrão Go (cmd/, internal/)
-- ✓ Interface `Command` padronizada para todos os comandos
-- ✓ Ponto de entrada minimalista em `cmd/assinatura/main.go`
-- ✓ Gerenciamento centralizado de versão
+### ✅ Fase 1 — Estrutura Base (Completo)
+- ✓ Estrutura de pacotes Go (`cmd/`, `internal/`)
+- ✓ Interface `Command` padronizada
+- ✓ Ponto de entrada minimalista
+- ✓ Versão gerenciada centralmente (`internal/version/`)
 
-### ✅ Fase 2 - Comando Version (Completo)
-- ✓ Comando `version` totalmente funcional
-- ✓ Flags: `--quiet`, `--json`, `--help`
-- ✓ Exit codes corretos (0 para sucesso, 1 para erro)
+### ✅ Fase 2 — Comando Version (Completo)
+- ✓ `version --quiet`, `--json`, `--help`
+- ✓ Exibe: tag + SHA curto + buildtime
 
-### ✅ Fase 3 - Backend Java Base & Validações (Completo)
-- ✓ Criação do subprojeto `assinador-java`
-- ✓ Definição do `SignatureService` e `FakeSignatureService`
-- ✓ Validação de parâmetros de assinatura no backend
+### ✅ Fase 3 — Backend Java Base (Completo)
+- ✓ Servidor HTTP Javalin com `/sign`, `/validate`, `/health`, `/shutdown`
+- ✓ Auto-shutdown por inatividade com timer reiniciado a cada requisição
+- ✓ Logs estruturados via slf4j
+- ✓ Testes de integração `SignatureControllerTest`
 
-### ⏳ Fase 4 - Modo Servidor HTTP & Integração (Em Progresso)
-- ✓ Servidor web leve baseado em **Javalin** e **Jackson** no backend Java (Completo)
-- ✓ Endpoints de API `/sign` e `/validate` robustos com tratamento de erro (Completo)
-- ✓ Endpoint de monitoramento de saúde `/health` funcional (Completo)
-- ✓ Suíte de testes de integração `SignatureControllerTest` validando todas as rotas (Completo)
-- ⏳ Integração real CLI-HTTP (Comunicação da CLI com a API Java)
-- ⏳ Comandos `start`/`stop` e monitoramento de ciclo de vida na CLI Go
+### ✅ Fase 4 — CLI Start/Stop/Status (Completo)
+- ✓ `start` com idempotência (health check real, não só "porta ocupada")
+- ✓ `stop` com shutdown graceful via PID file (SIGINT no Linux/macOS, taskkill no Windows)
+- ✓ `status` com verificação de prontidão real
+- ✓ Verificação de versão da JVM em runtime
+
+### ⏳ Fase 5 — Integração HTTP Real (Em Progresso)
+- ✓ Cliente HTTP com timeout (10s) e tratamento de erros de rede
+- ✓ Modo HTTP como padrão (`--mode http`)
+- ⏳ Integração end-to-end CLI → JAR real (atualmente SHA-256 local como simulação)
 
 ---
 
 ## 📖 Documentação
 
-- **[User Story 01 - Invocar Assinador via CLI](./docs/US-01%20-%20Invocar%20Assinador%20via%20CLI.md)** — Requisitos funcionais e critérios de aceitação
-- **[Planejamento do Projeto](./docs/planejamento/nossoPlanejamento.md)** — Visão geral e timeline
-- **[Design de Arquitetura](./docs/design.md)** — Padrões e decisões técnicas
+- [ADR-001 — Escolha de Go para a CLI](./docs/adr/001-escolha-go-para-cli.md)
+- [ADR-002 — Modo Servidor HTTP como Padrão](./docs/adr/002-modo-servidor-http-padrao.md)
+- [ADR-003 — Parser de CLI: stdlib flag](./docs/adr/003-parser-cli-stdlib-flag.md)
+- [Design de Arquitetura (C4)](./docs/design.md)
+- [Planejamento do Projeto](./docs/planejamento/nossoPlanejamento.md)
 
 ---
 
-## 🔧 Próximos Passos
+## 📜 Licença
 
-1. **Implementar comando `sign` / `validate` funcionais na CLI Go**:
-   - Chamar `java -jar assinador.jar` no modo local (*cold start*).
-   - Enviar requisições HTTP para a API Java no modo HTTP (*warm start*).
-
-2. **Implementar comandos `start`/`stop` na CLI Go**:
-   - Iniciar servidor HTTP do `assinador.jar` em background.
-   - Encerrar o processo e monitorar status ativo via `/health`.
-
-3. **Melhorias Técnicas**:
-   - Provisionamento automático do JDK.
-   - Setup de `Makefile` para build multi-plataforma e pipelines avançadas.
+Apache 2.0 — veja [LICENSE](./LICENSE).

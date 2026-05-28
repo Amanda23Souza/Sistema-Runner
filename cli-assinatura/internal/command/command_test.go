@@ -1,15 +1,24 @@
+// Package command contém testes unitários e de integração dos comandos CLI.
+// Rastreabilidade:
+//   - US-01: Invocar Assinador via CLI (sign, validate, start, stop, status)
+//   - US-02: Simular Assinatura Digital com Validação de Parâmetros
 package command
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
+// ─────────────────────────────────────────────────────────
+// SignCmd — US-01, US-02
+// ─────────────────────────────────────────────────────────
+
+// TestSignCmd_Run_CreatesSignatureFile verifica que o comando sign cria
+// o arquivo de assinatura corretamente no modo local.
+// US-01: sign --input <arquivo> --mode local
 func TestSignCmd_Run_CreatesSignatureFile(t *testing.T) {
 	tmp := t.TempDir()
 	inputPath := filepath.Join(tmp, "document.txt")
@@ -22,8 +31,9 @@ func TestSignCmd_Run_CreatesSignatureFile(t *testing.T) {
 
 	cmd := NewSignCmd()
 	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
 
-	if err := cmd.Run([]string{"--input", inputPath, "--output", outputPath}); err != nil {
+	if err := cmd.Run([]string{"--input", inputPath, "--output", outputPath, "--mode", "local"}); err != nil {
 		t.Fatalf("SignCmd.Run retornou erro: %v", err)
 	}
 
@@ -32,12 +42,99 @@ func TestSignCmd_Run_CreatesSignatureFile(t *testing.T) {
 		t.Fatalf("falha ao ler arquivo de assinatura: %v", err)
 	}
 
-	expected := sha256.Sum256(content)
-	if strings.TrimSpace(string(sigBytes)) != hex.EncodeToString(expected[:]) {
-		t.Fatalf("assinatura gerada incorreta: esperava %s, obteve %s", hex.EncodeToString(expected[:]), strings.TrimSpace(string(sigBytes)))
+	expected := computeSHA256(content)
+	if strings.TrimSpace(string(sigBytes)) != expected {
+		t.Fatalf("assinatura gerada incorreta: esperava %s, obteve %s", expected, strings.TrimSpace(string(sigBytes)))
 	}
 }
 
+// TestSignCmd_Run_MissingInput verifica que --input ausente retorna UserError.
+// US-02: validação de parâmetro obrigatório
+func TestSignCmd_Run_MissingInput(t *testing.T) {
+	cmd := NewSignCmd()
+	var errBuf bytes.Buffer
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &errBuf
+
+	err := cmd.Run([]string{"--mode", "local"})
+	if err == nil {
+		t.Fatal("esperava erro para --input ausente, mas não houve erro")
+	}
+	if !IsUserError(err) {
+		t.Fatalf("esperava UserError (código 2), obteve: %T: %v", err, err)
+	}
+	if !strings.Contains(errBuf.String(), "--input") {
+		t.Fatalf("mensagem de erro deveria mencionar --input, obteve: %q", errBuf.String())
+	}
+}
+
+// TestSignCmd_Run_InvalidMode verifica que --mode inválido retorna UserError.
+func TestSignCmd_Run_InvalidMode(t *testing.T) {
+	tmp := t.TempDir()
+	inputPath := filepath.Join(tmp, "doc.txt")
+	_ = os.WriteFile(inputPath, []byte("test"), 0644)
+
+	cmd := NewSignCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	err := cmd.Run([]string{"--input", inputPath, "--mode", "invalido"})
+	if err == nil {
+		t.Fatal("esperava erro para --mode inválido")
+	}
+	if !IsUserError(err) {
+		t.Fatalf("esperava UserError para modo inválido, obteve: %T", err)
+	}
+}
+
+// TestSignCmd_Run_FileWithSpacesAndAccents verifica E1.2:
+// passagem de argumentos preserva espaços e acentos.
+func TestSignCmd_Run_FileWithSpacesAndAccents(t *testing.T) {
+	tmp := t.TempDir()
+	inputPath := filepath.Join(tmp, "documento com espaços é ação.txt")
+	outputPath := filepath.Join(tmp, "documento com espaços é ação.sig")
+	content := []byte("conteúdo com acentuação: ção, ã, é, ü")
+
+	if err := os.WriteFile(inputPath, content, 0644); err != nil {
+		t.Fatalf("falha ao criar arquivo com acentos/espaços: %v", err)
+	}
+
+	cmd := NewSignCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	if err := cmd.Run([]string{"--input", inputPath, "--output", outputPath, "--mode", "local"}); err != nil {
+		t.Fatalf("falha ao assinar arquivo com espaços/acentos: %v", err)
+	}
+
+	if _, err := os.Stat(outputPath); err != nil {
+		t.Fatalf("arquivo de saída não criado: %v", err)
+	}
+}
+
+// TestSignCmd_Run_InputFileNotFound verifica E1.3: erro de sistema (não UserError)
+// quando o arquivo de entrada não existe.
+func TestSignCmd_Run_InputFileNotFound(t *testing.T) {
+	cmd := NewSignCmd()
+	var errBuf bytes.Buffer
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &errBuf
+
+	err := cmd.Run([]string{"--input", "/tmp/arquivo-que-nao-existe-xyz.txt", "--mode", "local"})
+	if err == nil {
+		t.Fatal("esperava erro para arquivo inexistente")
+	}
+	if IsUserError(err) {
+		t.Fatal("arquivo inexistente deve ser SystemError (exit 1), não UserError (exit 2)")
+	}
+}
+
+// ─────────────────────────────────────────────────────────
+// ValidateCmd — US-01, US-02
+// ─────────────────────────────────────────────────────────
+
+// TestValidateCmd_Run_ValidSignature verifica validação de assinatura correta.
+// US-01: validate --input <arquivo> --signature <arquivo.sig> --mode local
 func TestValidateCmd_Run_ValidSignature(t *testing.T) {
 	tmp := t.TempDir()
 	inputPath := filepath.Join(tmp, "document.txt")
@@ -48,24 +145,28 @@ func TestValidateCmd_Run_ValidSignature(t *testing.T) {
 		t.Fatalf("falha ao criar arquivo de entrada: %v", err)
 	}
 
-	hash := sha256.Sum256(content)
-	if err := os.WriteFile(sigPath, []byte(hex.EncodeToString(hash[:])), 0644); err != nil {
+	hash := computeSHA256(content)
+	if err := os.WriteFile(sigPath, []byte(hash), 0644); err != nil {
 		t.Fatalf("falha ao criar arquivo de assinatura: %v", err)
 	}
 
 	cmd := NewValidateCmd()
 	var out bytes.Buffer
 	cmd.out = &out
+	cmd.errOut = &bytes.Buffer{}
 
-	if err := cmd.Run([]string{"--input", inputPath, "--signature", sigPath}); err != nil {
+	if err := cmd.Run([]string{"--input", inputPath, "--signature", sigPath, "--mode", "local"}); err != nil {
 		t.Fatalf("ValidateCmd.Run retornou erro inesperado: %v", err)
 	}
 
-	if !strings.Contains(out.String(), "Status: VÁLIDA") {
+	if !strings.Contains(out.String(), "VÁLIDA") {
 		t.Fatalf("mensagem de validação esperada não encontrada: %s", out.String())
 	}
 }
 
+// TestValidateCmd_Run_InvalidSignature verifica que assinatura inválida
+// retorna erro e mensagem clara.
+// US-02: cenário negativo — assinatura incorreta
 func TestValidateCmd_Run_InvalidSignature(t *testing.T) {
 	tmp := t.TempDir()
 	inputPath := filepath.Join(tmp, "document.txt")
@@ -75,20 +176,143 @@ func TestValidateCmd_Run_InvalidSignature(t *testing.T) {
 	if err := os.WriteFile(inputPath, content, 0644); err != nil {
 		t.Fatalf("falha ao criar arquivo de entrada: %v", err)
 	}
-
-	if err := os.WriteFile(sigPath, []byte("deadbeef"), 0644); err != nil {
-		t.Fatalf("falha ao criar arquivo de assinatura: %v", err)
+	if err := os.WriteFile(sigPath, []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), 0644); err != nil {
+		t.Fatalf("falha ao criar arquivo de assinatura inválida: %v", err)
 	}
 
 	cmd := NewValidateCmd()
 	var out bytes.Buffer
 	cmd.out = &out
+	cmd.errOut = &bytes.Buffer{}
 
-	if err := cmd.Run([]string{"--input", inputPath, "--signature", sigPath}); err == nil {
-		t.Fatalf("ValidateCmd.Run deve retornar erro para assinatura inválida")
+	if err := cmd.Run([]string{"--input", inputPath, "--signature", sigPath, "--mode", "local"}); err == nil {
+		t.Fatal("ValidateCmd.Run deve retornar erro para assinatura inválida")
 	}
 
-	if !strings.Contains(out.String(), "Status: INVÁLIDA") {
-		t.Fatalf("mensagem de validação inválida esperada não encontrada: %s", out.String())
+	if !strings.Contains(out.String(), "INVÁLIDA") {
+		t.Fatalf("mensagem de assinatura inválida esperada não encontrada: %s", out.String())
+	}
+}
+
+// TestValidateCmd_Run_MissingInput verifica erro para --input ausente.
+func TestValidateCmd_Run_MissingInput(t *testing.T) {
+	cmd := NewValidateCmd()
+	var errBuf bytes.Buffer
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &errBuf
+
+	err := cmd.Run([]string{"--signature", "doc.sig", "--mode", "local"})
+	if err == nil {
+		t.Fatal("esperava erro para --input ausente")
+	}
+	if !IsUserError(err) {
+		t.Fatalf("esperava UserError, obteve: %T", err)
+	}
+}
+
+// TestValidateCmd_Run_MissingSignature verifica erro para --signature ausente.
+func TestValidateCmd_Run_MissingSignature(t *testing.T) {
+	cmd := NewValidateCmd()
+	var errBuf bytes.Buffer
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &errBuf
+
+	err := cmd.Run([]string{"--input", "doc.txt", "--mode", "local"})
+	if err == nil {
+		t.Fatal("esperava erro para --signature ausente")
+	}
+	if !IsUserError(err) {
+		t.Fatalf("esperava UserError, obteve: %T", err)
+	}
+}
+
+// TestValidateCmd_Run_SignatureFileNotFound verifica erro de sistema
+// quando o arquivo de assinatura não existe.
+func TestValidateCmd_Run_SignatureFileNotFound(t *testing.T) {
+	tmp := t.TempDir()
+	inputPath := filepath.Join(tmp, "doc.txt")
+	_ = os.WriteFile(inputPath, []byte("test"), 0644)
+
+	cmd := NewValidateCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	err := cmd.Run([]string{"--input", inputPath, "--signature", "/tmp/nao-existe.sig", "--mode", "local"})
+	if err == nil {
+		t.Fatal("esperava erro para arquivo de assinatura inexistente")
+	}
+	if IsUserError(err) {
+		t.Fatal("arquivo inexistente deve ser SystemError, não UserError")
+	}
+}
+
+// ─────────────────────────────────────────────────────────
+// RootCmd — help e roteamento
+// ─────────────────────────────────────────────────────────
+
+// TestRootCmd_UnknownCommand verifica que comando desconhecido retorna UserError.
+func TestRootCmd_UnknownCommand(t *testing.T) {
+	root := NewRootCmd()
+	var out, errOut bytes.Buffer
+	root.out = &out
+	root.errOut = &errOut
+
+	err := root.Run([]string{"comando-inexistente"})
+	if err == nil {
+		t.Fatal("esperava erro para comando desconhecido")
+	}
+	if !IsUserError(err) {
+		t.Fatalf("esperava UserError para comando desconhecido, obteve: %T", err)
+	}
+	if !strings.Contains(errOut.String(), "comando desconhecido") {
+		t.Fatalf("mensagem de erro esperada não encontrada no stderr: %q", errOut.String())
+	}
+}
+
+// TestRootCmd_Help verifica que --help não retorna erro.
+func TestRootCmd_Help(t *testing.T) {
+	root := NewRootCmd()
+	var out bytes.Buffer
+	root.out = &out
+	root.errOut = &bytes.Buffer{}
+
+	if err := root.Run([]string{"--help"}); err != nil {
+		t.Fatalf("--help não deve retornar erro: %v", err)
+	}
+	if !strings.Contains(out.String(), "assinatura") {
+		t.Fatalf("help deveria conter 'assinatura', obteve: %q", out.String())
+	}
+}
+
+// ─────────────────────────────────────────────────────────
+// VersionCmd
+// ─────────────────────────────────────────────────────────
+
+// TestVersionCmd_Run_ReturnsVersion verifica que version retorna sem erro.
+func TestVersionCmd_Run_ReturnsVersion(t *testing.T) {
+	cmd := NewVersionCmd()
+	var out bytes.Buffer
+	cmd.out = &out
+
+	if err := cmd.Run([]string{}); err != nil {
+		t.Fatalf("version não deve retornar erro: %v", err)
+	}
+	if out.String() == "" {
+		t.Fatal("version deve produzir saída não vazia")
+	}
+}
+
+// TestVersionCmd_Run_Quiet verifica que --quiet retorna apenas o número de versão.
+func TestVersionCmd_Run_Quiet(t *testing.T) {
+	cmd := NewVersionCmd()
+	var out bytes.Buffer
+	cmd.out = &out
+
+	if err := cmd.Run([]string{"--quiet"}); err != nil {
+		t.Fatalf("version --quiet não deve retornar erro: %v", err)
+	}
+	output := strings.TrimSpace(out.String())
+	if strings.Contains(output, " ") {
+		t.Fatalf("--quiet deve retornar apenas o número de versão sem espaços, obteve: %q", output)
 	}
 }
