@@ -11,6 +11,9 @@ func main() {
 	err := root.Run(os.Args[1:])
 
 	if err != nil {
-		os.Exit(1)
+		if command.IsUserError(err) {
+			os.Exit(command.ExitCodeUserError) // 2 = erro do usuário
+		}
+		os.Exit(command.ExitCodeSystemError) // 1 = erro do sistema
 	}
 }

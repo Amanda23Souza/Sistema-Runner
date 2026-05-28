@@ -4,12 +4,14 @@ package command
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 )
 
 // RootCmd é o comando raiz que orquestra todos os subcomandos.
 type RootCmd struct {
 	out      io.Writer
+	errOut   io.Writer
 	commands map[string]Command
 }
 
@@ -17,6 +19,7 @@ type RootCmd struct {
 func NewRootCmd() *RootCmd {
 	root := &RootCmd{
 		out:      os.Stdout,
+		errOut:   os.Stderr,
 		commands: make(map[string]Command),
 	}
 
@@ -26,6 +29,9 @@ func NewRootCmd() *RootCmd {
 	root.commands["criar"] = root.commands["sign"]
 	root.commands["validate"] = NewValidateCmd()
 	root.commands["validar"] = root.commands["validate"]
+	root.commands["start"] = NewStartCmd()
+	root.commands["stop"] = NewStopCmd()
+	root.commands["status"] = NewStatusCmd()
 
 	return root
 }
@@ -34,7 +40,7 @@ func NewRootCmd() *RootCmd {
 func (c *RootCmd) Run(args []string) error {
 	if len(args) == 0 {
 		fmt.Fprintln(c.out, c.Help())
-		return fmt.Errorf("no command specified")
+		return fmt.Errorf("nenhum comando especificado")
 	}
 
 	cmdName := args[0]
@@ -53,9 +59,10 @@ func (c *RootCmd) Run(args []string) error {
 	// Busca o comando registrado
 	cmd, exists := c.commands[cmdName]
 	if !exists {
-		fmt.Fprintf(c.out, "Erro: comando desconhecido '%s'\n", cmdName)
-		fmt.Fprintln(c.out, "Use 'assinatura --help' para ver a lista de comandos.")
-		return fmt.Errorf("command not found: %s", cmdName)
+		fmt.Fprintf(c.errOut, "Erro: comando desconhecido '%s'\n", cmdName)
+		fmt.Fprintln(c.errOut, "Use 'assinatura --help' para ver a lista de comandos.")
+		slog.Error("comando desconhecido", "comando", cmdName)
+		return &UserError{msg: fmt.Sprintf("comando não encontrado: %s", cmdName)}
 	}
 
 	// Executa o comando com os argumentos restantes
@@ -69,20 +76,26 @@ func (c *RootCmd) Help() string {
 Usage: assinatura <command> [OPTIONS]
 
 Commands:
-  version           Display the version of assinatura CLI
-  sign/criar        Create a digital signature for a file
-  validate/validar   Validate a digital signature
+  version              Exibe a versão do CLI
+  sign / criar         Cria uma assinatura digital para um arquivo
+  validate / validar   Valida uma assinatura digital
+  start                Inicia o servidor assinador em background
+  stop                 Encerra o servidor assinador
+  status               Verifica o status do servidor assinador
 
 Global Options:
-  --help       Show this help message
-  --version    Display version information
+  --help       Exibe esta mensagem de ajuda
+  --version    Exibe informações de versão
+  --verbose    Habilita saída detalhada (logs de debug)
 
 Examples:
-  assinatura version
-  assinatura sign --input document.pdf
-	assinatura criar --input document.pdf --mode http
-  assinatura validate --input document.pdf --signature document.sig
-	assinatura validar --input document.pdf --signature document.sig --json
+  assinatura start
+  assinatura start --port 9090
+  assinatura sign --input documento.pdf
+  assinatura criar --input documento.pdf --mode local
+  assinatura validate --input documento.pdf --signature documento.sig
+  assinatura stop
+  assinatura status
 
-Use 'assinatura <command> --help' for more information about a command.`
+Use 'assinatura <command> --help' para mais informações sobre um comando.`
 }

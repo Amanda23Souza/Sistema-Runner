@@ -1,0 +1,51 @@
+# Binários Go
+cli-assinatura/assinatura
+cli-assinatura/assinatura.exe
+
+# Artefatos de Build Java (Maven)
+docs/aulas/projetos/assinador-java/target/
+
+# Artefatos Go intermediários
+*.test
+*.out
+coverage.out
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Logs
+*.log
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# Dependências Node (caso usado em scripts)
+node_modules/
