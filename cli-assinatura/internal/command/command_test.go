@@ -247,6 +247,30 @@ func TestValidateCmd_Run_SignatureFileNotFound(t *testing.T) {
 }
 
 // ─────────────────────────────────────────────────────────
+// StartCmd
+// ─────────────────────────────────────────────────────────
+
+// TestStartCmd_ParseTimeoutFlag verifica se a flag --timeout é parseada corretamente.
+func TestStartCmd_ParseTimeoutFlag(t *testing.T) {
+	cmd := NewStartCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	// Passando a flag --timeout 15, não queremos executar o Run completo (que tentaria iniciar o java),
+	// então usaremos a validação inicial do Parse via Run. O Run vai falhar porque não acha o JAR na nossa temp.
+	// Mas o parse terá ocorrido! Então vamos apenas verificar se cmd.timeout foi setado corretamente.
+	// Outra forma é verificar que não dá erro de sintaxe.
+	
+	// Para não travar no exec.LookPath ou Run real, vamos apenas mockar os args se possível, ou testar o erro
+	err := cmd.Run([]string{"--timeout", "15", "--jar", "nonexistent.jar"})
+	
+	// Esperamos um erro porque "nonexistent.jar" não existe ou Java não está no PATH, mas o timeout deve ser 15
+	if cmd.timeout != 15 {
+		t.Fatalf("esperava timeout 15, obteve: %d (erro retornado: %v)", cmd.timeout, err)
+	}
+}
+
+// ─────────────────────────────────────────────────────────
 // RootCmd — help e roteamento
 // ─────────────────────────────────────────────────────────
 

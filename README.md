@@ -32,7 +32,7 @@ O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facil
 │   │   │   ├── sign.go          ← Comando sign/criar (modo http padrão)
 │   │   │   ├── validate.go      ← Comando validate/validar
 │   │   │   ├── start.go         ← Comando start (health check idempotente)
-│   │   │   ├── stop.go          ← Comando stop + status
+│   │   │   ├── stop.go          ← Comando stop (/shutdown + PID fallback) + status
 │   │   │   ├── version.go       ← Comando version (tag + SHA curto)
 │   │   │   ├── http.go          ← Cliente HTTP com timeout e tratamento de erros
 │   │   │   ├── errors.go        ← UserError vs SystemError
@@ -51,7 +51,10 @@ O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facil
 │   ├── adr/                     ← Architecture Decision Records
 │   │   ├── 001-escolha-go-para-cli.md
 │   │   ├── 002-modo-servidor-http-padrao.md
-│   │   └── 003-parser-cli-stdlib-flag.md
+│   │   ├── 003-parser-cli-stdlib-flag.md
+│   │   └── 004-simulador-pkcs11.md
+│   ├── api-contract.md          ← Contrato formal CLI↔JAR (endpoints, JSON, erros)
+│   ├── conformidade-criterios.md ← Relatório de conformidade com critérios
 │   ├── design.md                ← Diagramas C4 (contexto e contêineres)
 │   └── planejamento/
 │       └── nossoPlanejamento.md
@@ -226,11 +229,14 @@ mvn test
 
 ## 📖 Documentação
 
+- [Contrato de API CLI↔JAR](./docs/api-contract.md)
 - [ADR-001 — Escolha de Go para a CLI](./docs/adr/001-escolha-go-para-cli.md)
 - [ADR-002 — Modo Servidor HTTP como Padrão](./docs/adr/002-modo-servidor-http-padrao.md)
 - [ADR-003 — Parser de CLI: stdlib flag](./docs/adr/003-parser-cli-stdlib-flag.md)
+- [ADR-004 — Simulador PKCS#11](./docs/adr/004-simulador-pkcs11.md)
 - [Design de Arquitetura (C4)](./docs/design.md)
 - [Planejamento do Projeto](./docs/planejamento/nossoPlanejamento.md)
+- [Relatório de Conformidade](./docs/conformidade-criterios.md)
 
 ---
 
