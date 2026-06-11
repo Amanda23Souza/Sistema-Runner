@@ -39,6 +39,8 @@ O Sistema Runner é uma aplicação CLI (Command-Line Interface) em Go que facil
 │   │   │   └── util.go          ← Utilitários (SHA-256)
 │   │   └── version/
 │   │       └── version.go       ← Metadados de versão (injetados via ldflags)
+│   ├── test/e2e/
+│   │   └── cli_test.go          ← Testes e2e: compila o binário real e valida comportamento
 │   └── go.mod
 ├── docs/aulas/projetos/assinador-java/  ← Subprojeto Assinador (Java)
 │   ├── src/main/java/com/runner/assinador/
@@ -147,6 +149,12 @@ cd cli-assinatura
 go test ./...
 ```
 
+> Os testes e2e em `test/e2e/` compilam o binário real e levam alguns segundos a mais.
+> Para rodar apenas testes unitários (rápidos), use `-short`:
+> ```bash
+> go test -short ./...
+> ```
+
 ### Com cobertura de código
 
 ```bash
@@ -166,7 +174,8 @@ go test -race ./...
 
 ```bash
 cd docs/aulas/projetos/assinador-java
-mvn test
+mvn verify          # compila, testa e verifica estilo (checkstyle)
+mvn test            # apenas testes, sem checkstyle
 ```
 
 ---
