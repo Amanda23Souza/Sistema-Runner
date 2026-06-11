@@ -65,6 +65,9 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -84,9 +87,13 @@ jobs:
         working-directory: cli-assinatura
         run: go mod download
 
-      - name: Run tests with coverage
+      - name: Run unit tests with coverage
         working-directory: cli-assinatura
-        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+        run: go test -v -race -short -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Run e2e tests
+        working-directory: cli-assinatura
+        run: go test -v -timeout 120s ./test/e2e/
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
