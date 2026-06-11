@@ -72,7 +72,7 @@
 **Evidências:**
 - `README.md` documenta os comandos de build: `go build -o assinatura ./cmd/assinatura` e `mvn clean package`.
 - O CI (`.github/workflows/build.yml`) valida Go (lint + testes em Ubuntu e Windows) **e** Java (`mvn clean verify`) a cada push/PR.
-- `go.mod` declara versão mínima Go (`go 1.26.1`).
+- `go.mod` declara versão mínima Go (`go 1.26`).
 - README inclui seções "Como Compilar", "Como Executar os Testes" e "Como Contribuir".
 
 ---
@@ -459,7 +459,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `go.mod`: `go 1.26.1` declara versão mínima do Go.
+- `go.mod`: `go 1.26` declara versão mínima do Go.
 - `start.go` contém `checkJavaVersion()` que verifica versão Java ≥ 21 em runtime.
 
 ---
