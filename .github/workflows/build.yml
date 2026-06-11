@@ -117,11 +117,17 @@ jobs:
           - goos: linux
             goarch: amd64
             suffix: ""
+          - goos: linux
+            goarch: arm64
+            suffix: ""
           - goos: windows
             goarch: amd64
             suffix: ".exe"
           - goos: darwin
             goarch: amd64
+            suffix: ""
+          - goos: darwin
+            goarch: arm64
             suffix: ""
 
     steps:
