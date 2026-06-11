@@ -22,8 +22,8 @@ class SignatureControllerTest {
 
     private static Javalin app;
     private static int port;
-    private static final HttpClient client = HttpClient.newHttpClient();
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final HttpClient CLIENT = HttpClient.newHttpClient();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @BeforeAll
     static void setup() {
@@ -51,7 +51,7 @@ class SignatureControllerTest {
         SignRequest req = new SignRequest();
         req.setContent("test content");
         
-        String json = mapper.writeValueAsString(req);
+        String json = MAPPER.writeValueAsString(req);
         
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/sign"))
@@ -59,10 +59,10 @@ class SignatureControllerTest {
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build();
             
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         
         assertEquals(200, response.statusCode());
-        SignatureResponse res = mapper.readValue(response.body(), SignatureResponse.class);
+        SignatureResponse res = MAPPER.readValue(response.body(), SignatureResponse.class);
         assertTrue(res.isValid());
         assertEquals("MOCKED_SIGNATURE_BASE64_==", res.getSignature());
     }
@@ -73,7 +73,7 @@ class SignatureControllerTest {
         req.setContent("test content");
         req.setSignature("MOCKED_SIGNATURE_BASE64_==");
         
-        String json = mapper.writeValueAsString(req);
+        String json = MAPPER.writeValueAsString(req);
         
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/validate"))
@@ -81,10 +81,10 @@ class SignatureControllerTest {
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build();
             
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         
         assertEquals(200, response.statusCode());
-        SignatureResponse res = mapper.readValue(response.body(), SignatureResponse.class);
+        SignatureResponse res = MAPPER.readValue(response.body(), SignatureResponse.class);
         assertTrue(res.isValid());
         assertEquals("MOCKED_SIGNATURE_BASE64_==", res.getSignature());
     }
@@ -95,7 +95,7 @@ class SignatureControllerTest {
         req.setContent("test content");
         req.setSignature("WRONG_SIGNATURE");
         
-        String json = mapper.writeValueAsString(req);
+        String json = MAPPER.writeValueAsString(req);
         
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/validate"))
@@ -103,10 +103,10 @@ class SignatureControllerTest {
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build();
             
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         
         assertEquals(200, response.statusCode());
-        SignatureResponse res = mapper.readValue(response.body(), SignatureResponse.class);
+        SignatureResponse res = MAPPER.readValue(response.body(), SignatureResponse.class);
         assertFalse(res.isValid());
         assertEquals("Assinatura é inválida", res.getMessage());
     }
@@ -115,7 +115,7 @@ class SignatureControllerTest {
     void testSignEndpointMissingContent() throws Exception {
         SignRequest req = new SignRequest();
         
-        String json = mapper.writeValueAsString(req);
+        String json = MAPPER.writeValueAsString(req);
         
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/sign"))
@@ -123,11 +123,11 @@ class SignatureControllerTest {
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build();
             
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         
         // As per our implementation, it returns BAD_REQUEST (400) when validation fails
         assertEquals(400, response.statusCode());
-        SignatureResponse res = mapper.readValue(response.body(), SignatureResponse.class);
+        SignatureResponse res = MAPPER.readValue(response.body(), SignatureResponse.class);
         assertFalse(res.isValid());
         assertEquals("Parâmetro 'content' inválido ou ausente", res.getMessage());
     }
@@ -139,7 +139,7 @@ class SignatureControllerTest {
             .GET()
             .build();
             
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         
         assertEquals(200, response.statusCode());
         assertTrue(response.body().contains("\"status\":\"UP\""));

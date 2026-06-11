@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class App {
 
-    private static final Logger log = LoggerFactory.getLogger(App.class);
+    private static final Logger LOG = LoggerFactory.getLogger(App.class);
     private static final int DEFAULT_PORT = 8080;
     private static final int DEFAULT_INACTIVITY_TIMEOUT_SECONDS = 300; // 5 minutos
 
@@ -57,7 +57,7 @@ public class App {
         startServer(port, inactivityTimeout);
     }
 
-    static void startServer(int port, int inactivityTimeoutSeconds) {
+    static Javalin startServer(int port, int inactivityTimeoutSeconds) {
         SignatureService signatureService = new FakeSignatureService();
         SignatureController controller = new SignatureController(signatureService);
 
@@ -93,7 +93,7 @@ public class App {
 
         // Endpoint de shutdown controlado
         app.post("/shutdown", ctx -> {
-            log.info("Shutdown solicitado via endpoint /shutdown");
+            LOG.info("Shutdown solicitado via endpoint /shutdown");
             ctx.status(200).json(Map.of("message", "Servidor encerrando..."));
             // Encerra em background para que a resposta seja enviada
             new Thread(() -> {
@@ -108,24 +108,26 @@ public class App {
         });
 
         app.start(port);
-        log.info("Assinador iniciado na porta {} (timeout de inatividade: {}s)", port, inactivityTimeoutSeconds);
+        LOG.info("Assinador iniciado na porta {} (timeout de inatividade: {}s)", port, inactivityTimeoutSeconds);
 
         // Agenda verificação periódica de inatividade
         final int timeoutSeconds = inactivityTimeoutSeconds;
         ScheduledFuture<?> watchdogTask = scheduler.scheduleAtFixedRate(() -> {
             long idleMs = System.currentTimeMillis() - lastActivity.get();
             if (idleMs > timeoutSeconds * 1000L) {
-                log.info("Auto-shutdown por inatividade: {}s sem requisições. Encerrando servidor.", idleMs / 1000);
+                LOG.info("Auto-shutdown por inatividade: {}s sem requisições. Encerrando servidor.", idleMs / 1000);
                 appRef.get().stop();
                 scheduler.shutdownNow();
             }
-        }, timeoutSeconds, 10, TimeUnit.SECONDS);
+        }, timeoutSeconds, 1, TimeUnit.SECONDS);
 
         // Garante limpeza ao encerrar via sinal do SO
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             watchdogTask.cancel(true);
             scheduler.shutdownNow();
-            log.info("Servidor assinador encerrado.");
+            LOG.info("Servidor assinador encerrado.");
         }, "shutdown-hook"));
+
+        return app;
     }
 }
