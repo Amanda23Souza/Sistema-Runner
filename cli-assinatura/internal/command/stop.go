@@ -64,7 +64,17 @@ func (c *StopCmd) Run(args []string) error {
 		return nil
 	}
 
-	// Carrega o PID salvo
+	// Tenta shutdown graceful via endpoint HTTP (preferível)
+	shutdownURL := fmt.Sprintf("http://localhost:%d/shutdown", c.port)
+	if _, err := httpPost(shutdownURL, "{}"); err == nil {
+		fmt.Fprintf(c.out, "Servidor assinador na porta %d encerrando via /shutdown...\n", c.port)
+		slog.Info("shutdown graceful via endpoint", "porta", c.port)
+		removePID(c.port)
+		return nil
+	}
+	slog.Warn("endpoint /shutdown não respondeu, tentando encerrar via PID", "porta", c.port)
+
+	// Fallback: encerra via PID salvo
 	pid, err := loadPID(c.port)
 	if err != nil {
 		fmt.Fprintf(c.errOut, "Erro do sistema: não foi possível encontrar o PID do servidor na porta %d.\n", c.port)
@@ -74,7 +84,7 @@ func (c *StopCmd) Run(args []string) error {
 		return fmt.Errorf("PID não encontrado para porta %d: %w", c.port, err)
 	}
 
-	// Encerra o processo
+	// Encerra o processo via sinal/taskkill
 	if err := killProcess(pid); err != nil {
 		fmt.Fprintf(c.errOut, "Erro do sistema: falha ao encerrar o processo PID %d.\n", pid)
 		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
@@ -84,7 +94,7 @@ func (c *StopCmd) Run(args []string) error {
 
 	removePID(c.port)
 	fmt.Fprintf(c.out, "Servidor assinador na porta %d encerrado com sucesso (PID: %d).\n", c.port, pid)
-	slog.Info("servidor encerrado", "porta", c.port, "pid", pid)
+	slog.Info("servidor encerrado via PID", "porta", c.port, "pid", pid)
 	return nil
 }
 

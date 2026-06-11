@@ -19,6 +19,7 @@ type StartCmd struct {
 	out     io.Writer
 	errOut  io.Writer
 	port    int
+	timeout int
 	jarPath string
 	verbose bool
 }
@@ -42,6 +43,7 @@ o comando reutiliza a instância existente sem iniciar outra.
 
 Options:
   --port PORT       Porta em que o servidor irá escutar (padrão: 8080)
+  --timeout MINS    Tempo de inatividade em minutos para auto-shutdown (padrão do servidor: 5 min)
   --jar  PATH       Caminho para o assinador.jar (padrão: busca automática)
   --verbose         Habilita saída detalhada
   --help            Exibe esta mensagem de ajuda
@@ -57,6 +59,7 @@ func (c *StartCmd) Run(args []string) error {
 	fs := flag.NewFlagSet("start", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.IntVar(&c.port, "port", 8080, "Porta do servidor")
+	fs.IntVar(&c.timeout, "timeout", 0, "Tempo de inatividade em minutos para auto-shutdown")
 	fs.StringVar(&c.jarPath, "jar", "", "Caminho para o assinador.jar")
 	fs.BoolVar(&c.verbose, "verbose", false, "Habilita saída detalhada")
 
@@ -117,7 +120,13 @@ func (c *StartCmd) Run(args []string) error {
 	}
 
 	// Inicia o servidor em background
-	cmd := exec.Command("java", "-jar", jarPath, strconv.Itoa(c.port))
+	javaArgs := []string{"-jar", jarPath, strconv.Itoa(c.port)}
+	if c.timeout > 0 {
+		timeoutSecs := c.timeout * 60
+		javaArgs = append(javaArgs, "--inactivity-timeout", strconv.Itoa(timeoutSecs))
+	}
+
+	cmd := exec.Command("java", javaArgs...)
 	cmd.Stdout = nil // Desacopla stdout do processo filho
 	cmd.Stderr = nil
 
