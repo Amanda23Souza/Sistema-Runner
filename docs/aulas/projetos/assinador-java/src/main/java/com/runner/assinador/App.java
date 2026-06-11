@@ -57,7 +57,7 @@ public class App {
         startServer(port, inactivityTimeout);
     }
 
-    static void startServer(int port, int inactivityTimeoutSeconds) {
+    static Javalin startServer(int port, int inactivityTimeoutSeconds) {
         SignatureService signatureService = new FakeSignatureService();
         SignatureController controller = new SignatureController(signatureService);
 
@@ -119,7 +119,7 @@ public class App {
                 appRef.get().stop();
                 scheduler.shutdownNow();
             }
-        }, timeoutSeconds, 10, TimeUnit.SECONDS);
+        }, timeoutSeconds, 1, TimeUnit.SECONDS);
 
         // Garante limpeza ao encerrar via sinal do SO
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -127,5 +127,7 @@ public class App {
             scheduler.shutdownNow();
             log.info("Servidor assinador encerrado.");
         }, "shutdown-hook"));
+
+        return app;
     }
 }

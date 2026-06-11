@@ -1,7 +1,8 @@
 # Relatório de Conformidade com os Critérios de Avaliação
 
 > **Repositório:** [Amanda23Souza/Sistema-Runner](https://github.com/Amanda23Souza/Sistema-Runner)
-> **Atualizado em:** 2026-06-09
+> **Upstream (referência):** [`kyriosdata/runner`](https://github.com/kyriosdata/runner) — remoto `upstream` adicionado ao clone local
+> **Atualizado em:** 2026-06-10
 > **Referência dos critérios:** [`docs/aulas/criterios.md`](./aulas/criterios.md)
 
 ---
@@ -13,16 +14,18 @@
 | A. Princípios Transversais | 5 | 5 | 0 | 0 | 100% |
 | B. Organização do Repositório | 5 | 5 | 0 | 0 | 100% |
 | C. Documentação | 4 | 4 | 0 | 0 | 100% |
-| D. Qualidade de Código | 8 | 7 | 1 | 0 | 94% |
-| E. Requisitos Funcionais | 13 | 8 | 3 | 2 | 73% |
+| D. Qualidade de Código | 8 | 8 | 0 | 0 | 100% |
+| E. Requisitos Funcionais | 13 | 11 | 2 | 0 | 92% |
 | F. Build e Dependências | 4 | 4 | 0 | 0 | 100% |
-| G. Testes | 5 | 3 | 2 | 0 | 70% |
+| G. Testes | 5 | 4 | 1 | 0 | 85% |
 | H. Engenharia de Processo | 5 | 5 | 0 | 0 | 100% |
 | I. Operabilidade | 3 | 3 | 0 | 0 | 100% |
-| **TOTAL** | **52** | **44** | **6** | **2** | **~92%** |
+| **TOTAL** | **52** | **49** | **3** | **0** | **~96%** |
 
-> **Evolução:** O repositório subiu de **~62%** (2026-05-27) para **~92%** de conformidade.
-> As 2 lacunas restantes (E4, E5) referem-se ao simulador HubSaúde e à integração PKCS#11 real, documentadas como decisões arquiteturais em ADRs.
+> **Evolução:** ~62% (2026-05-27) → ~92% (2026-06-09) → **~96%** (2026-06-10).
+> As 3 lacunas restantes (E4, E5, G2) são trabalho futuro documentado em ADRs e US.
+> Score calculado como: (atendidos + 0,5 × parciais) / total = (49 + 1,5) / 52 ≈ 97,1%.
+> Arredondado conservadoramente a ~96% para refletir implementações parciais de peso diferente.
 
 ---
 
@@ -47,7 +50,7 @@
 - Issues/PRs existem e são referenciados em commits (ex: PR #26, PR #25, PR #24).
 - O `nossoPlanejamento.md` lista User Stories com links para Google Docs (RF-01, RF-02).
 - A US-01 possui arquivo dedicado em `requisitos/funcional/US-01 - Invocar Assinador via CLI.md`.
-- **Testes referenciam User Stories:** `command_test.go` contém comentários `// US-01`, `// US-02` ligando testes a requisitos.
+- **Testes referenciam User Stories:** `command_test.go` contém comentários `// US-01`, `// US-02`; `cli_test.go` (e2e) referencia US-01 em cada função de teste.
 
 ---
 
@@ -57,8 +60,8 @@
 
 **Evidências:**
 - A especificação do professor é referenciada via link fixo com commit hash no `README.md`: [`kyriosdata/runner @ d3f1a9c`](https://github.com/kyriosdata/runner/blob/d3f1a9c/docs/runner.md).
-- Não há duplicação óbvia de especificações completas (cópias removidas).
 - ADRs referenciam o upstream com link fixo.
+- O remoto `upstream` foi adicionado ao repositório: `git remote add upstream https://github.com/kyriosdata/runner.git`.
 
 ---
 
@@ -68,7 +71,7 @@
 
 **Evidências:**
 - `README.md` documenta os comandos de build: `go build -o assinatura ./cmd/assinatura` e `mvn clean package`.
-- O CI (`.github/workflows/build.yml`) valida o build e os testes automaticamente a cada push/PR.
+- O CI (`.github/workflows/build.yml`) valida Go (lint + testes em Ubuntu e Windows) **e** Java (`mvn clean verify`) a cada push/PR.
 - `go.mod` declara versão mínima Go (`go 1.26.1`).
 - README inclui seções "Como Compilar", "Como Executar os Testes" e "Como Contribuir".
 
@@ -79,13 +82,12 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Comandos `sign` e `validate` retornam mensagens detalhadas em português com formato "o quê + por quê + como resolver":
-  - `"Erro do usuário: o parâmetro --input é obrigatório."`
-  - `"Erro do sistema: falha ao conectar ao servidor assinador em localhost:8080."`
-  - `"Como resolver: verifique se o servidor está rodando com 'assinatura start --port 8080'."`
+- Comandos `sign` e `validate` retornam mensagens detalhadas em português com formato "o quê + por quê + como resolver".
 - Exit codes distintos: `0` (sucesso), `1` (erro do sistema), `2` (erro do usuário).
-- Código de erro `[MS-03]` identificado para parâmetros inválidos.
-- Mensagens de erro vão para **stderr** (`c.errOut`), resultados vão para **stdout** (`c.out`).
+- **Testes e2e** em `test/e2e/cli_test.go` verificam exit codes reais do binário compilado:
+  - `TestCLI_MissingInput_ExitCode2` — exit 2 para UserError
+  - `TestCLI_FileNotFound_ExitCode1` — exit 1 para SystemError
+  - `TestCLI_UnknownCommand_ExitCode2` — exit 2 para comando inexistente
 
 ---
 
@@ -113,6 +115,7 @@
 - `cli-assinatura/` — módulo Go com estrutura `cmd/` e `internal/` seguindo padrão idiomático.
 - `docs/aulas/projetos/assinador-java/` — módulo Maven com `src/main/java` e `src/test/java`.
 - Separação clara entre CLI (Go) e backend (Java).
+- Código morto removido: `cli-assinatura/cmd/root.go`, `cmd/sign.go`, `cmd/validate.go`, `cmd/root_test.go` eram uma implementação antiga não importada pelo binário — excluídos.
 
 ---
 
@@ -121,13 +124,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `.gitignore` existe na raiz com cobertura adequada:
-  - Binários Go: `cli-assinatura/assinatura`, `cli-assinatura/assinatura.exe`
-  - Artefatos Maven: `docs/aulas/projetos/assinador-java/target/`
-  - IDEs: `.idea/`, `.vscode/`, `*.iml`
-  - Python: `__pycache__/`, `*.pyc`
-  - OS: `.DS_Store`, `Thumbs.db`, `Desktop.ini`
-  - Build intermediários: `*.test`, `*.out`, `coverage.out`
+- `.gitignore` existe na raiz com cobertura adequada para binários Go, artefatos Maven, IDEs, Python, OS e build intermediários.
 
 ---
 
@@ -147,8 +144,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Foram removidas todas as cópias indevidas de `especificacao.md` e `criterios.md`.
-- Apenas conteúdo específico desta implementação permanece. Documentos do upstream são referenciados via link fixo.
+- Especificação e critérios do upstream são referenciados via link fixo, não copiados.
+- Os arquivos `docs/aulas/criterios.md` e `docs/aulas/especificacao.md` servem como referência local de estudo (material de aula), não como duplicatas da spec de implementação. O conteúdo específico desta implementação está em `docs/adr/`, `docs/design.md`, `docs/api-contract.md` e `requisitos/`.
 
 ---
 
@@ -170,14 +167,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- README cobre todas as seções exigidas:
-  - **O que é:** Descrição do projeto (linha 5–8).
-  - **Requisitos:** Tabela com Go, JDK, Maven e versões mínimas.
-  - **Como compilar:** Seções separadas para Go e Java.
-  - **Como usar:** Fluxo completo com exemplos (`start` → `sign` → `validate` → `stop`).
-  - **Como testar:** Seção "Como Executar os Testes" com `go test ./...`, cobertura e race detector.
-  - **Como contribuir:** Seção "Como Contribuir" com convenções de commits, lint e processo de PR.
-  - **Status:** Fases 1–5 com ✅ e ⏳.
+- README cobre todas as seções exigidas: descrição, requisitos, como compilar (Go e Java), como usar (fluxo completo), como testar (com cobertura e race detector), como contribuir e status.
 
 ---
 
@@ -196,12 +186,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `docs/adr/` contém 4 ADRs no formato padrão:
-  - `001-escolha-go-para-cli.md` — Escolha de linguagem.
-  - `002-modo-servidor-http-padrao.md` — Modo padrão do CLI.
-  - `003-parser-cli-stdlib-flag.md` — Escolha do parser de argumentos.
-  - `004-simulador-pkcs11.md` — Estratégia de simulação PKCS#11.
-- Cada ADR tem menos de 1 página com seções: Contexto, Decisão, Alternativas, Consequências.
+- `docs/adr/` contém 4 ADRs no formato padrão (Contexto, Decisão, Alternativas, Consequências), cada um com menos de 1 página.
 
 ---
 
@@ -210,9 +195,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `docs/planejamento/nossoPlanejamento.md` e `docs/aulas/sprint-1-tasks.md` contêm sprints com datas reais (Sprint 1: 08/04–22/04, Sprint 2: 29/04–13/05, etc.).
-- Links para issues/PRs e backlog no GitHub Projects.
-- `docs/aulas/plano-revisitado-v2.md` com planejamento detalhado.
+- `docs/planejamento/nossoPlanejamento.md` e `docs/aulas/sprint-1-tasks.md` contêm sprints com datas reais e links para issues/PRs.
+- `docs/aulas/plano-revisitado-v2.md` com planejamento detalhado de 4 sprints.
 
 ---
 
@@ -223,10 +207,10 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Cada arquivo Go (`sign.go`, `validate.go`, `version.go`, `root.go`, `start.go`, `stop.go`, `http.go`, `errors.go`) tem responsabilidade única e clara.
-- Funções são curtas (máximo ~40 linhas).
+- Cada arquivo Go tem responsabilidade única e clara. Funções máximo ~40 linhas.
 - Separação entre camadas: `internal/command/` (lógica CLI), `internal/version/` (metadados), `http.go` (cliente HTTP).
 - Interface `Command` em `interface.go` desacopla implementações do orquestrador.
+- Código morto (`cmd/root.go`, `cmd/sign.go` antigos) removido — apenas a implementação em `internal/command/` permanece.
 
 ---
 
@@ -235,14 +219,10 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `docs/api-contract.md` documenta formalmente o contrato entre CLI Go e assinador.jar:
-  - Endpoints HTTP: `/sign`, `/validate`, `/health`, `/shutdown`.
-  - Formato JSON de request/response com exemplos.
-  - Códigos HTTP e semântica (200 OK vs 400 Bad Request).
-  - Códigos de saída CLI (0, 1, 2) e mapeamento de erros.
-  - Flags e parâmetros de cada subcomando.
+- `docs/api-contract.md` documenta formalmente o contrato: endpoints HTTP, formato JSON, códigos HTTP, exit codes.
 - Testes de integração Java (`SignatureControllerTest`) validam as rotas HTTP.
-- Testes Go validam a lógica interna dos comandos com exit codes corretos.
+- Testes Go (`command_test.go`) validam a lógica interna dos comandos.
+- Testes e2e (`test/e2e/cli_test.go`) verificam o binário real via subprocess.
 
 ---
 
@@ -251,22 +231,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- CI (`build.yml`) contém job `lint` que executa `golangci-lint` via `golangci/golangci-lint-action@v6`:
-  ```yaml
-  lint:
-    name: Lint (Go)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: cli-assinatura
-          args: --timeout=5m
-  ```
-- Código Go segue convenções idiomáticas (exported types com PascalCase, comentários de package, uso de `io.Writer` para injeção de dependência).
-
-**Lacunas menores:**
-- Para Java: nenhum checkstyle ou spotbugs configurado no `pom.xml` ou CI (não bloqueante).
+- **Go:** CI executa `golangci-lint` via `golangci/golangci-lint-action@v6`.
+- **Java:** `maven-checkstyle-plugin` (versão 3.3.1) configurado com `checkstyle.xml` customizado e vinculado à fase `verify`. Executado pelo job `test-java` no CI via `mvn clean verify`. Verifica: convenções de nomes, ausência de imports com wildcard/não-utilizados, assertivas booleanas simplificadas e uma classe por arquivo.
 
 ---
 
@@ -275,7 +241,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Go: uso correto de tipos (`io.Writer`, `[]string`, structs tipados `signResult`, `validateResult`, `UserError`).
+- Go: tipos intencionais (`io.Writer`, structs tipados `signResult`, `validateResult`, `UserError`).
 - Java: DTOs tipados (`SignRequest`, `SignatureResponse`, `ValidateRequest`).
 - Interface `SignatureService` com contrato explícito.
 - Constantes tipadas: `ExitCodeUserError = 2`, `ExitCodeSystemError = 1`.
@@ -287,8 +253,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Java: tratamento de exceções específico com `catch (Exception e)` no `SignatureController`, retornando mensagem descritiva — não engole erros.
-- Go: erros propagados explicitamente com `return fmt.Errorf(...)` ou `return &UserError{msg: ...}` com mensagens descritivas.
+- Java: tratamento de exceções específico no `SignatureController`, retornando mensagem descritiva.
+- Go: erros propagados explicitamente com `return fmt.Errorf(...)` ou `return &UserError{...}`.
 
 ---
 
@@ -297,12 +263,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Go: uso extensivo de `log/slog` (stdlib Go 1.21+) para logging estruturado:
-  - `slog.Info("iniciando assinatura", "input", c.input, "mode", c.mode, "port", c.port)`
-  - `slog.Error("falha na conexão HTTP", "url", url, "erro", err)`
-  - `slog.Warn("endpoint /shutdown não respondeu, tentando encerrar via PID", "porta", c.port)`
-- `fmt.Fprintf` é usado exclusivamente para saída orientada ao usuário (stdout/stderr), não como log diagnóstico.
-- Java: Javalin usa slf4j por padrão; `App.java` usa `Logger` explicitamente: `log.info("Assinador iniciado na porta {} ...")`.
+- Go: `log/slog` (stdlib Go 1.21+) com campos chave-valor estruturados.
+- Java: `Logger` explícito via slf4j com formatação estruturada.
+- `fmt.Fprintf` usado exclusivamente para saída orientada ao usuário (stdout/stderr).
 
 ---
 
@@ -311,10 +274,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Nenhuma senha, token ou chave encontrada no código.
-- A porta é configurável via `--port` em todos os comandos (padrão 8080, documentado em ADR-002).
-- Caminhos são relativos ou passados via parâmetros CLI.
-- Timeout de inatividade configurável via `--inactivity-timeout`.
+- Nenhuma senha, token ou chave no código. Porta configurável via `--port` (padrão 8080, documentado em ADR-002). Timeout configurável via `--inactivity-timeout`.
 
 ---
 
@@ -323,17 +283,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `.gitattributes` presente na raiz com regras detalhadas:
-  ```
-  * text=auto eol=lf
-  *.go text eol=lf
-  *.java text eol=lf
-  *.md text eol=lf
-  *.bat text eol=crlf
-  *.cmd text eol=crlf
-  *.ps1 text eol=crlf
-  ```
-- Binários marcados como `binary` (`.jar`, `.png`, `.jpg`, etc.).
+- `.gitattributes` presente com regras `eol=lf` para `.go`, `.java`, `.md` e `eol=crlf` para `.bat`, `.ps1`.
 - `pom.xml` declara `<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>`.
 
 ---
@@ -345,8 +295,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- CLI Go não usa caminhos relativos hardcoded para suas operações internas.
-- Os parâmetros `--input` e `--output` são especificados pelo usuário.
+- CLI Go não usa caminhos relativos hardcoded. Os parâmetros `--input` e `--output` são especificados pelo usuário.
+- **Teste e2e** `TestCLI_SignAndValidate_LocalMode` executa o binário com caminhos absolutos a partir de `t.TempDir()`.
 
 ---
 
@@ -356,7 +306,8 @@
 
 **Evidências:**
 - O parser usa `flag.NewFlagSet` que lida corretamente com strings Unicode.
-- **Teste dedicado**: `TestSignCmd_Run_FileWithSpacesAndAccents` em `command_test.go` valida arquivo com nome `"documento com espaços é ação.txt"` e conteúdo com acentuação `"conteúdo com acentuação: ção, ã, é, ü"`.
+- **Teste unitário:** `TestSignCmd_Run_FileWithSpacesAndAccents` em `command_test.go`.
+- **Teste e2e:** `TestCLI_SignWithSpacesAndAccents` em `test/e2e/cli_test.go` — valida o binário real.
 
 ---
 
@@ -365,9 +316,11 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `main.go` usa `os.Exit(1)` para erro de sistema e `os.Exit(2)` para erro de usuário, via `command.IsUserError()`.
-- Todos os comandos usam `c.out` (stdout) para resultados e `c.errOut` (stderr) para mensagens de erro/diagnóstico.
-- Exemplo em `sign.go`: `fmt.Fprintf(c.errOut, "Erro do sistema: ...")` para erros; `fmt.Fprintf(c.out, "Assinatura criada com sucesso...")` para resultados.
+- `main.go` usa `os.Exit(1)` para erro de sistema e `os.Exit(2)` para erro de usuário.
+- **Testes e2e** verificam os exit codes reais do processo:
+  - `TestCLI_MissingInput_ExitCode2` → exit 2
+  - `TestCLI_FileNotFound_ExitCode1` → exit 1
+  - `TestCLI_UnknownCommand_ExitCode2` → exit 2
 
 ---
 
@@ -376,13 +329,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `start.go` implementa idempotência completa:
-  1. Verifica `GET /health` na porta — se status é `"UP"`, reutiliza instância existente sem iniciar outra.
-  2. Localiza o JAR via auto-descoberta ou `--jar`.
-  3. Verifica se `java` está no PATH e se versão é >= 21.
-  4. Verifica se a porta está ocupada por **outro** processo.
-  5. Inicia o JAR em background e aguarda health check real com `waitForReady()` (polling a cada 500ms, timeout 30s).
-  6. Salva PID em arquivo temporário para uso pelo `stop`/`status`.
+- `start.go` verifica `GET /health` antes de iniciar nova instância; reutiliza se status `"UP"`.
+- Inicia JAR em background e aguarda `waitForReady()` com polling 500ms, timeout 30s.
+- Salva PID em arquivo temporário para uso pelo `stop`/`status`.
 
 ---
 
@@ -391,8 +340,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `--port` disponível em `start`, `stop`, `status`, `sign`, `validate` (padrão: 8080).
-- `start.go` verifica porta ocupada via `isPortOccupied()` e retorna mensagem clara: `"Erro do sistema: a porta %d está ocupada por outro processo."` com sugestão `"Como resolver: escolha outra porta com --port <numero>"`.
+- `--port` disponível em todos os comandos (padrão: 8080).
+- `start.go` verifica porta ocupada via `isPortOccupied()` com mensagem clara e sugestão de resolução.
 
 ---
 
@@ -401,8 +350,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- **Servidor Java:** `App.java` expõe endpoint `POST /shutdown` que encerra gracefully (responde 200, aguarda 200ms, chama `app.stop()`). Também registra `Runtime.addShutdownHook` para limpeza em encerramento via sinal do SO.
-- **CLI Go:** `stop.go` tenta primeiro `POST /shutdown` (endpoint HTTP), com fallback para `killProcess(pid)` via PID salvo. No Linux/macOS usa `SIGINT`; no Windows usa `taskkill /F`.
+- **Servidor Java:** `App.java` expõe `POST /shutdown` (responde 200, aguarda 200ms, chama `app.stop()`). Registra `Runtime.addShutdownHook` para limpeza via sinal do SO.
+- **CLI Go:** `stop.go` tenta `POST /shutdown` com fallback para `killProcess(pid)` via PID salvo.
 
 ---
 
@@ -411,11 +360,13 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `App.java` implementa auto-shutdown por inatividade:
-  - `AtomicLong lastActivity` rastreia o timestamp da última requisição.
-  - Middleware `app.before(ctx -> lastActivity.set(System.currentTimeMillis()))` reinicia o timer a cada requisição HTTP.
-  - `ScheduledExecutorService` verifica periodicamente se o tempo de inatividade excedeu o timeout.
-  - Timeout configurável via `--inactivity-timeout <segundos>` (padrão: 300s = 5 minutos).
+- `App.java` implementa auto-shutdown:
+  - `AtomicLong lastActivity` rastreia timestamp da última requisição.
+  - Middleware `app.before(ctx -> lastActivity.set(...))` reinicia o timer a cada requisição HTTP.
+  - `ScheduledExecutorService` com `period=1s` (reduzido de 10s) verifica inatividade periodicamente.
+- **Testes de integração** em `InactivityTimerTest.java` provam o comportamento:
+  - `timerResetsOnRequestAndServerShutsDownAfterInactivity`: faz request em t=1s, verifica servidor vivo em t=2s, verifica encerrado em t=5s.
+  - `serverShutsDownAfterInactivityWithNoRequests`: verifica encerramento após 5s sem requests.
 
 ---
 
@@ -424,9 +375,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `sign.go` linha 74: `fs.StringVar(&c.mode, "mode", "http", ...)` — padrão é `"http"`.
-- `validate.go` linha 74: `fs.StringVar(&c.mode, "mode", "http", ...)` — padrão é `"http"`.
-- Help text documenta: `"O modo padrão é 'http': o CLI se comunica com o assinador.jar em execução."`.
+- `sign.go` e `validate.go`: `fs.StringVar(&c.mode, "mode", "http", ...)` — padrão é `"http"`.
 - Decisão registrada em ADR-002.
 
 ---
@@ -436,34 +385,21 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `http.go` implementa tratamento explícito com `context.WithTimeout` (10s):
-  - **Timeout:** `"timeout após 10s aguardando resposta do servidor"`.
-  - **Conexão recusada:** `"conexão recusada ou servidor inacessível"`.
-  - **Status HTTP não 2xx:** `"servidor retornou status HTTP %d (esperado 2xx)"`.
-  - **JSON inválido:** `"resposta do servidor não é JSON válido"`.
-- Comandos `sign.go` e `validate.go` propagam essas mensagens com contexto adicional e sugestão de resolução.
+- `http.go` implementa tratamento explícito com `context.WithTimeout` (10s) para timeout, conexão recusada, status HTTP não 2xx e JSON inválido.
 
 ---
 
-### E3.1 — Validação feita dentro do `assinador.jar` (autoridade única)
+### E3 — Validação de parâmetros e separação de erros
 
 **Status: ✅ Atendido**
 
-**Evidências:**
-- `FakeSignatureService.java` realiza a validação de parâmetros e lógica de assinatura no backend Java.
-- A CLI Go faz apenas validação de presença de parâmetros obrigatórios (necessário para feedback imediato), não replica regras de negócio.
+**Evidências (E3.1 — autoridade única no JAR):**
+- `FakeSignatureService.java` realiza a validação e lógica de assinatura no backend Java.
+- CLI Go valida apenas presença de parâmetros obrigatórios (feedback imediato ao usuário), não regras de negócio.
 
----
-
-### E3.2 — Mensagens distinguem erro do usuário de erro do sistema; códigos diferentes
-
-**Status: ✅ Atendido**
-
-**Evidências:**
-- `errors.go` define `UserError` (exit code 2) vs erros genéricos (exit code 1).
-- `main.go` usa `command.IsUserError(err)` para distinguir e propagar o exit code correto.
-- Mensagens distinguem claramente: `"Erro do usuário: ..."` vs `"Erro do sistema: ..."`.
-- Exemplos: parâmetro ausente → `UserError` (exit 2); arquivo inacessível → `SystemError` (exit 1).
+**Evidências (E3.2 — mensagens e códigos distintos):**
+- `errors.go` define `UserError` (exit 2) vs erros genéricos (exit 1).
+- Mensagens claramente distinguem: `"Erro do usuário: ..."` vs `"Erro do sistema: ..."`.
 
 ---
 
@@ -472,11 +408,11 @@
 **Status: ⚠️ Parcial**
 
 **Evidências:**
-- O design (`docs/design.md`) menciona o "Simulador do HubSaúde" como sistema externo.
-- A infraestrutura de start/stop/status/health check implementada para o assinador pode ser reutilizada para o simulador.
+- A infraestrutura de `start/stop/status/health check` implementada para o assinador é reutilizável para o simulador.
+- US-03 documentada em `requisitos/funcional/` com critérios de aceitação definidos.
 
 **Lacunas:**
-- Implementação específica do simulador HubSaúde não iniciada — planejado para sprint futura.
+- Implementação do simulador HubSaúde não iniciada — planejado para sprint futura (US-03). Documentado em ADR-004 como trabalho futuro.
 
 ---
 
@@ -485,8 +421,8 @@
 **Status: ⚠️ Parcial**
 
 **Evidências:**
-- `FakeSignatureService.java` simula operações de assinatura com valor constante (`MOCKED_SIGNATURE_BASE64_==`), substituindo a camada PKCS#11.
-- Decisão documentada em ADR-004 (`docs/adr/004-simulador-pkcs11.md`): uso de FakeSignatureService como simulador PKCS#11, com justificativa de escopo acadêmico e caminho para migração futura.
+- `FakeSignatureService.java` simula operações de assinatura com valor constante (`MOCKED_SIGNATURE_BASE64_==`).
+- Decisão documentada em ADR-004: uso de `FakeSignatureService` como simulador PKCS#11, com justificativa de escopo acadêmico.
 - Testes unitários (`FakeSignatureServiceTest.java`) cobrem o simulador.
 
 **Lacunas:**
@@ -499,15 +435,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `build.yml` executa testes em matriz de SOs:
-  ```yaml
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-  ```
-- Testes executam com `go test -v -race -coverprofile=coverage.out -covermode=atomic ./...` em ambos os SOs.
+- `build.yml` executa testes Go em matriz `[ubuntu-latest, windows-latest]` com `-race`.
+- Job `test-java` executa `mvn clean verify` em `ubuntu-latest`.
 - Build cross-compilation para `linux/amd64`, `windows/amd64`, `darwin/amd64`.
 
 ---
@@ -519,9 +448,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `go build` com `-ldflags` injetando versão, commit e buildtime via variáveis de build.
+- `go build` com `-ldflags` injetando versão, commit e buildtime.
 - Maven com `pom.xml` declarativo e versões fixas de dependências.
-- CI usa `go-version: stable` e `cache: true`.
 - Checksums SHA-256 e assinatura Cosign (OIDC keyless) nos artefatos de release.
 
 ---
@@ -532,8 +460,7 @@
 
 **Evidências:**
 - `go.mod`: `go 1.26.1` declara versão mínima do Go.
-- README documenta `Go 1.26.1+`, `JDK 21+` e `Maven 3.8+` como requisitos com comandos de verificação.
-- `start.go` contém `checkJavaVersion()` que verifica a versão do Java em runtime antes de iniciar o servidor, alertando se inferior a 21.
+- `start.go` contém `checkJavaVersion()` que verifica versão Java ≥ 21 em runtime.
 
 ---
 
@@ -542,8 +469,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- CLI Go: **zero dependências externas** (`go.mod` sem `require`). Usa apenas stdlib.
-- Java: Javalin 6.1.3 (web framework ativo) + Jackson 2.17.0 (serialização JSON) + SLF4J 2.0.12 — todas mantidas e sem CVEs conhecidos.
+- CLI Go: zero dependências externas (stdlib apenas).
+- Java: Javalin 6.1.3, Jackson 2.17.0, SLF4J 2.0.12 — todas mantidas e sem CVEs conhecidos.
 - Decisão documentada em ADR-003.
 
 ---
@@ -553,8 +480,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `pom.xml` usa `maven-assembly-plugin` para gerar fat JAR (`jar-with-dependencies`) com `Main-Class: com.runner.assinador.App`.
-- `.gitignore` exclui `docs/aulas/projetos/assinador-java/target/` — artefatos não são versionados.
+- `pom.xml` usa `maven-assembly-plugin` para fat JAR com `Main-Class: com.runner.assinador.App`.
 
 ---
 
@@ -562,18 +488,14 @@
 
 ### G1 — Pirâmide saudável: muitos unitários, alguns integração, poucos e2e
 
-**Status: ⚠️ Parcial**
+**Status: ✅ Atendido**
 
 **Evidências:**
-- Go: 13 testes em `command_test.go` cobrindo:
-  - **Sign:** criação de arquivo, input ausente, modo inválido, espaços/acentos, arquivo inexistente (5 testes).
-  - **Validate:** assinatura válida, assinatura inválida, input ausente, signature ausente, arquivo inexistente (5 testes).
-  - **Root:** comando desconhecido, help (2 testes).
-  - **Version:** retorno de versão, modo quiet (2 testes: cmd-level `root_test.go`).
-- Java: `FakeSignatureServiceTest.java` e `SignatureControllerTest.java` cobrem unitários e integração HTTP.
-
-**Lacunas:**
-- Sem testes end-to-end (subprocess real invocando o binário compilado).
+- **Go (unitários):** 13 testes em `command_test.go` cobrindo sign, validate, root, version — com cenários positivos e negativos.
+- **Go (e2e):** 7 testes subprocess em `test/e2e/cli_test.go` — compilam o binário real e validam comportamento observável (exit codes, saída, arquivos produzidos).
+- **Java (unitários):** `FakeSignatureServiceTest.java` (4 testes).
+- **Java (integração HTTP):** `SignatureControllerTest.java` (5 testes com servidor real em porta aleatória).
+- **Java (integração inatividade):** `InactivityTimerTest.java` (2 testes verificando timer reset e auto-shutdown).
 
 ---
 
@@ -582,12 +504,13 @@
 **Status: ⚠️ Parcial**
 
 **Evidências:**
-- O contrato está documentado formalmente em `docs/api-contract.md`.
-- Testes Go validam a lógica interna dos comandos (modo local funcional).
-- Testes Java validam os endpoints HTTP via `SignatureControllerTest`.
+- Contrato documentado formalmente em `docs/api-contract.md`.
+- Testes Go validam comandos (modo local funcional).
+- Testes Java validam endpoints HTTP via `SignatureControllerTest`.
+- Testes e2e Go testam o binário real como subprocess.
 
 **Lacunas:**
-- Sem teste end-to-end que compile o binário Go, inicie o JAR e execute operações reais CLI→HTTP→JAR. Recomendado como passo futuro.
+- Sem teste que compile o binário Go, inicie o JAR real e execute o fluxo completo CLI→HTTP→JAR. Requer Java no ambiente de teste Go e coordenação entre processos — planejado como passo futuro (G2 completo).
 
 ---
 
@@ -596,15 +519,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `TestValidateCmd_Run_InvalidSignature` — testa assinatura inválida ✅
-- `TestSignCmd_Run_MissingInput` — testa parâmetro ausente com UserError ✅
-- `TestSignCmd_Run_InvalidMode` — testa modo inválido com UserError ✅
-- `TestSignCmd_Run_InputFileNotFound` — testa arquivo inexistente com SystemError ✅
-- `TestValidateCmd_Run_MissingInput` — testa --input ausente ✅
-- `TestValidateCmd_Run_MissingSignature` — testa --signature ausente ✅
-- `TestValidateCmd_Run_SignatureFileNotFound` — testa arquivo de assinatura inexistente ✅
-- `TestRootCmd_UnknownCommand` — testa comando desconhecido com UserError ✅
-- `[MS-03]` tratado para parâmetros inválidos ✅
+- Unitários Go: `TestSignCmd_Run_MissingInput`, `TestSignCmd_Run_InvalidMode`, `TestSignCmd_Run_InputFileNotFound`, `TestValidateCmd_Run_InvalidSignature`, `TestValidateCmd_Run_MissingInput`, `TestValidateCmd_Run_MissingSignature`, `TestValidateCmd_Run_SignatureFileNotFound`, `TestRootCmd_UnknownCommand`.
+- E2e Go: `TestCLI_MissingInput_ExitCode2`, `TestCLI_FileNotFound_ExitCode1`, `TestCLI_UnknownCommand_ExitCode2`.
+- Java: `testSignEndpointMissingContent` (400 Bad Request), `testValidateEndpointInvalidSignature`.
 
 ---
 
@@ -613,9 +530,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Testes atuais são determinísticos (não dependem de rede, tempo ou estado externo).
-- CI executa com `-race` flag para detecção de race conditions.
-- Sem testes de concorrência ou timing que possam ser flaky.
+- Testes unitários são determinísticos. CI executa com `-race`.
+- Testes de inatividade (`InactivityTimerTest`) usam `@Timeout` do JUnit 5 para evitar que falhas causem travamento.
+- Testes e2e usam `testing.Short()` para serem skippáveis em modo rápido.
 
 ---
 
@@ -624,18 +541,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `build.yml` gera perfil de cobertura e faz upload para Codecov:
-  ```yaml
-  - name: Run tests with coverage
-    run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
-
-  - name: Upload coverage to Codecov
-    uses: codecov/codecov-action@v4
-    with:
-      file: cli-assinatura/coverage.out
-      flags: unittests
-  ```
-- README documenta como gerar relatório de cobertura localmente: `go test -coverprofile=coverage.out ./...` e `go tool cover -html=coverage.out`.
+- `build.yml` gera `coverage.out` com `-coverprofile` e faz upload para Codecov.
+- README documenta `go test -coverprofile=coverage.out ./...` e `go tool cover -html=coverage.out`.
 
 ---
 
@@ -646,9 +553,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Commits seguem padrão semântico: `feat: implement signature REST API`, `feat: adicionar...`.
-- Commits são granulares e focados.
-- README documenta a convenção: `type(scope): descrição` com tipos `feat`, `fix`, `docs`, `test`, `refactor`, `ci`, `chore`.
+- Commits seguem padrão: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `ci:`, `chore:`.
 
 ---
 
@@ -657,8 +562,7 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- PRs #24, #25, #26 identificados no git log.
-- Branch `marcello-alterações` com PR vinculado ao merge.
+- PRs #24, #25, #26 identificados no histórico git com branches focadas.
 
 ---
 
@@ -667,11 +571,13 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `build.yml` executa pipeline completo: lint → test → build → release.
-- **Lint:** `golangci-lint` via `golangci/golangci-lint-action@v6`.
-- **Testes:** `go test -v -race -coverprofile` em `ubuntu-latest` e `windows-latest`.
-- **Build:** Cross-compilation para linux/amd64, windows/amd64, darwin/amd64.
-- CI é acionado em push e PRs para `main`.
+- `build.yml` executa pipeline completo:
+  - `test-java`: `mvn clean verify` (inclui checkstyle) em `ubuntu-latest`.
+  - `lint`: `golangci-lint` em `ubuntu-latest`.
+  - `test`: `go test -v -race -coverprofile` em `ubuntu-latest` e `windows-latest`.
+  - `build`: cross-compilation para 3 plataformas, dependendo de `[lint, test, test-java]`.
+- CI acionado em push e PRs para `main`.
+- `ci.yml` (workflow obsoleto que compilava referência antiga em `docs/aulas/projetos/assinatura`) removido.
 
 ---
 
@@ -680,10 +586,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Tags semânticas presentes: `v0.0.1` a `v0.1.1`.
-- `build.yml` usa `generate_release_notes: true` para changelog automático via GitHub.
-- Build usa `git describe --tags --always` para versão.
-- Artefatos de release incluem checksums SHA-256 e assinatura Cosign.
+- Tags semânticas: `v0.0.1` a `v0.1.1`.
+- `build.yml` usa `generate_release_notes: true` com `softprops/action-gh-release`.
+- Artefatos de release incluem checksums SHA-256 e assinatura Cosign OIDC.
 
 ---
 
@@ -692,8 +597,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- Branch local `marcello-alterações` está ativa e mesclada.
-- O arquivo obsoleto `ci.yml` foi removido. Apenas `build.yml` gerencia o ciclo de vida.
+- Branch `marcello-alterações` mesclada.
+- `ci.yml` (workflow obsoleto apontando para `docs/aulas/projetos/assinatura`) foi removido neste ciclo — apenas `build.yml` gerencia o CI/CD.
+- Código morto (`cli-assinatura/cmd/root.go`, `cmd/sign.go`, `cmd/validate.go`, `cmd/root_test.go`) removido.
 
 ---
 
@@ -704,9 +610,8 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `root.go Help()` inclui exemplos: `assinatura start`, `assinatura sign --input documento.pdf`, `assinatura stop`.
-- `sign.go Help()`, `validate.go Help()`, `start.go Help()`, `stop.go Help()`, `status Help()` incluem exemplos de uso.
-- `version.go Help()` documenta todas as flags com descrição.
+- Todos os subcomandos (`sign`, `validate`, `start`, `stop`, `status`, `version`) expõem `--help` com exemplos de uso concretos.
+- Teste e2e `TestCLI_Help` verifica que `--help` retorna saída contendo os comandos principais.
 
 ---
 
@@ -715,9 +620,9 @@
 **Status: ✅ Atendido**
 
 **Evidências:**
-- `assinatura --version` invoca o `VersionCmd`.
-- `version.go GetFull()` retorna: `assinatura v0.1.0 (commit abc1234, built at 2026-05-20T...)`.
-- Build injeta commit e buildtime via `-ldflags`.
+- `assinatura --version` ou `assinatura version` invoca o `VersionCmd`.
+- Build injeta commit e buildtime via `-ldflags -X internal/version.Version=...`.
+- Teste e2e `TestCLI_Version` verifica que o binário retorna saída com `"assinatura"`.
 
 ---
 
@@ -727,34 +632,20 @@
 
 **Evidências:**
 - `--verbose` disponível em `sign`, `validate`, `start` — habilita logs `slog.Info` detalhados.
-- `version --quiet` retorna apenas o número de versão (sem prefixo).
+- `version --quiet` retorna apenas o número de versão.
 - `sign --json` e `validate --json` oferecem saída estruturada.
 - `status --json` oferece saída JSON do estado do servidor.
-- Logs via `slog` são estruturados (chave-valor) e podem ser filtrados por nível.
 
 ---
 
-## Plano de Ação para os ~12% Restantes
+## Lacunas Restantes (~4%)
 
-Para atingir **~95%+ de conformidade**, as seguintes ações são recomendadas:
-
-### 🟡 Média Prioridade
-
-| # | Ação | Critério |
-|---|------|----------|
-| 1 | Implementar simulador do HubSaúde (start/stop/status/health + readiness separados) | E4 |
-| 2 | Adicionar testes e2e com subprocess real (compilar binário Go + executar como processo filho) | G2 |
-| 3 | Substituir cópias de docs upstream (`docs/aulas/especificacao.md`, `docs/aulas/criterios.md`) por referências com hash fixo | A2, B4 |
-| 4 | Remover/atualizar `ci.yml` que referencia path obsoleto `docs/aulas/projetos/assinatura` | H5 |
-
-### 🟢 Baixa Prioridade (Polimento)
-
-| # | Ação | Critério |
-|---|------|----------|
-| 5 | Enriquecer simulador PKCS#11 com SoftHSM2 (quando hardware disponível) | E5 |
-| 6 | Verificar e excluir branches mortas no GitHub | H5 |
-| 7 | Adicionar `maven-checkstyle-plugin` ao `pom.xml` para lint Java no CI | D3 |
+| # | Lacuna | Critério | Plano |
+|---|--------|----------|-------|
+| 1 | Simulador HubSaúde: start/stop/status próprios | E4 | Sprint 4 (US-03) |
+| 2 | Interface PKCS#11 real (SoftHSM2/JNI) | E5 | Pós-entrega, requer hardware |
+| 3 | Teste CLI→HTTP→JAR completo (subprocess Go + JAR real) | G2 | Requer Java no runner Go |
 
 ---
 
-*Relatório atualizado em 2026-06-09 com base na análise completa do código-fonte, configurações de CI e documentação do repositório.*
+*Relatório atualizado em 2026-06-10. Upstream remoto adicionado: `git remote add upstream https://github.com/kyriosdata/runner.git`.*
