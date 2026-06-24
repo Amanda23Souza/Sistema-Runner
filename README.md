@@ -205,34 +205,133 @@ mvn test            # apenas testes, sem checkstyle
 
 ---
 
-## 📊 Status de Implementação
+## 📁 Estrutura do Pacote `cmd/`
 
-### ✅ Fase 1 — Estrutura Base (Completo)
+O pacote `cmd/` expõe o dispatcher `Execute()` seguindo a estrutura de referência do professor:
+
+```
+cli-assinatura/
+├── cmd/
+│   ├── root.go          ← Execute() — dispatcher principal (switch/case)
+│   ├── sign.go          ← runSign() — delega para internal/command
+│   ├── validate.go      ← runValidate() — delega para internal/command
+│   ├── root_test.go     ← testes do dispatcher Execute()
+│   └── assinatura/
+│       └── main.go      ← ponto de entrada do binário
+└── internal/
+    └── command/
+        ├── jdk.go        ← provisionamento automático JDK 21 (Adoptium)
+        └── ...
+```
+
+---
+
+## 🔧 Provisionamento Automático do JDK
+
+O comando `start` detecta e provisiona o JDK automaticamente em três etapas:
+
+1. **PATH**: usa `java` do PATH do sistema se disponível
+2. **Cache local**: usa `~/.assinador/jdk/bin/java` se já provisionado
+3. **Download automático**: baixa JDK 21 da [Adoptium](https://adoptium.net) e extrai em `~/.assinador/jdk/`
+
+O download é silencioso na primeira execução e as versões subsequentes usam o cache:
+
+```bash
+# Primeira execução (sem java no PATH): faz download do JDK 21 automaticamente
+./assinatura start
+
+# Execuções seguintes: usa o cache em ~/.assinador/jdk/
+./assinatura start
+```
+
+---
+
+## 🔑 Integração PKCS#11 (Simulada)
+
+O fluxo de assinatura integra CLI → servidor JAR → `FakeSignatureService` (simulação PKCS#11):
+
+```
+assinatura sign --input doc.pdf
+       │
+       ▼ lê conteúdo do arquivo
+       │
+       ▼ POST /sign  {"content": "<conteúdo>"}
+  assinador.jar (porta 8080)
+       │
+       ▼ FakeSignatureService.sign()
+       │  retorna MOCKED_SIGNATURE_BASE64_==
+       │
+       ▼ salva em doc.pdf.sig
+```
+
+```
+assinatura validate --input doc.pdf --signature doc.pdf.sig
+       │
+       ▼ lê conteúdo + assinatura
+       │
+       ▼ POST /validate {"content": "...", "signature": "MOCKED_SIGNATURE_BASE64_=="}
+  assinador.jar
+       │
+       ▼ valid: true/false
+```
+
+---
+
+## 📊 Status de Implementação (Sprint 4 — Release Final)
+
+### ✅ Fase 1 — Estrutura Base
 - ✓ Estrutura de pacotes Go (`cmd/`, `internal/`)
 - ✓ Interface `Command` padronizada
-- ✓ Ponto de entrada minimalista
+- ✓ Ponto de entrada com exit codes distintos (0/1/2)
 - ✓ Versão gerenciada centralmente (`internal/version/`)
 
-### ✅ Fase 2 — Comando Version (Completo)
+### ✅ Fase 2 — Comando Version
 - ✓ `version --quiet`, `--json`, `--help`
-- ✓ Exibe: tag + SHA curto + buildtime
+- ✓ Exibe: tag + SHA curto + buildtime (injetados via ldflags)
 
-### ✅ Fase 3 — Backend Java Base (Completo)
+### ✅ Fase 3 — Backend Java Base
 - ✓ Servidor HTTP Javalin com `/sign`, `/validate`, `/health`, `/shutdown`
-- ✓ Auto-shutdown por inatividade com timer reiniciado a cada requisição
-- ✓ Logs estruturados via slf4j
-- ✓ Testes de integração `SignatureControllerTest`
+- ✓ Auto-shutdown por inatividade (padrão: 5 min, configurável via `--inactivity-timeout`)
+- ✓ Testes de integração `SignatureControllerTest` + `FakeSignatureServiceTest`
 
-### ✅ Fase 4 — CLI Start/Stop/Status (Completo)
-- ✓ `start` com idempotência (health check real, não só "porta ocupada")
-- ✓ `stop` com shutdown graceful via PID file (SIGINT no Linux/macOS, taskkill no Windows)
+### ✅ Fase 4 — CLI Lifecycle (Start/Stop/Status)
+- ✓ `start` idempotente (health check real antes de iniciar)
+- ✓ `stop` com shutdown graceful via `/shutdown` + fallback PID (SIGINT/taskkill)
 - ✓ `status` com verificação de prontidão real
-- ✓ Verificação de versão da JVM em runtime
+- ✓ Compilação automática do JAR com Maven (`mvn package`) se não encontrado
 
-### ⏳ Fase 5 — Integração HTTP Real (Em Progresso)
-- ✓ Cliente HTTP com timeout (10s) e tratamento de erros de rede
-- ✓ Modo HTTP como padrão (`--mode http`)
-- ⏳ Integração end-to-end CLI → JAR real (atualmente SHA-256 local como simulação)
+### ✅ Fase 5 — Parsing de Comandos (Sprint 3/4)
+- ✓ Pacote `cmd/` com dispatcher `Execute()` (switch/case, conforme estrutura do professor)
+- ✓ `cmd/root.go`, `cmd/sign.go`, `cmd/validate.go`, `cmd/root_test.go`
+- ✓ Aliases: `sign`/`criar`, `validate`/`validar`
+
+### ✅ Fase 6 — Invocação do assinador.jar via CLI
+- ✓ Modo HTTP padrão: lê conteúdo do arquivo e envia ao `/sign` com JSON válido
+- ✓ Modo local: assinatura SHA-256 offline (sem servidor)
+- ✓ `validate` lê arquivo + assinatura e envia ao `/validate`
+
+### ✅ Fase 7 — Provisionamento Automático do JDK
+- ✓ Detecção em PATH → cache local (`~/.assinador/jdk/`) → download automático
+- ✓ Download do JDK 21 da Adoptium (Linux/Mac: `.tar.gz`, Windows: `.zip`)
+- ✓ Extração nativa em Go (sem dependências externas)
+
+### ✅ Fase 8 — Elaboração de Testes
+- ✓ Testes unitários: `internal/command/command_test.go` (sign, validate, start, version, root)
+- ✓ Testes do dispatcher: `cmd/root_test.go`
+- ✓ Testes de JDK provisioning: `localJDKBin`, `localJDKDir`, `resolveJava`
+- ✓ Testes de modo HTTP: verifica comportamento correto com servidor offline
+- ✓ Testes e2e: `test/e2e/cli_test.go` (compila binário real)
+- ✓ CI multi-plataforma: Ubuntu + Windows
+
+### ✅ Fase 9 — Refinamento
+- ✓ Bug corrigido: modo HTTP enviava caminho do arquivo em vez do conteúdo
+- ✓ JSON encoding correto via `json.Marshal` (não formatação manual com `%s`)
+- ✓ Separação clara `UserError` (exit 2) vs `SystemError` (exit 1)
+
+### ✅ Fase 10 — Documentação Final
+- ✓ README com fluxo completo, diagrama de integração, referência de comandos
+- ✓ ADRs: Go para CLI, modo HTTP padrão, stdlib flag, simulador PKCS#11
+- ✓ API contract: `docs/api-contract.md`
 
 ---
 

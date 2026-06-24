@@ -14,6 +14,9 @@ import (
 	"time"
 )
 
+// jarBuildPath é o caminho do JAR gerado pelo Maven.
+const jarBuildPath = "docs/aulas/projetos/assinador-java/target/assinador-java-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
+
 // StartCmd implementa o comando "start" — inicia o servidor assinador em background.
 type StartCmd struct {
 	out     io.Writer
@@ -98,16 +101,15 @@ func (c *StartCmd) Run(args []string) error {
 		slog.Info("iniciando servidor", "jar", jarPath, "porta", c.port)
 	}
 
-	// Verifica se JVM está disponível
-	if _, err := exec.LookPath("java"); err != nil {
-		fmt.Fprintf(c.errOut, "Erro do sistema: 'java' não encontrado no PATH.\n")
-		fmt.Fprintf(c.errOut, "Como resolver: instale o JDK 21+ e certifique-se de que 'java' está no PATH.\n")
-		slog.Error("JVM não encontrada no PATH")
-		return fmt.Errorf("JVM (java) não encontrada no PATH")
+	// Resolve (ou provisiona automaticamente) o executável java
+	javaExec, err := c.resolveJava()
+	if err != nil {
+		slog.Error("JVM não disponível", "erro", err)
+		return err
 	}
 
 	// Verifica versão do Java (mínimo 21)
-	if err := checkJavaVersion(c.errOut); err != nil {
+	if err := checkJavaVersion(javaExec, c.errOut); err != nil {
 		fmt.Fprintf(c.errOut, "Aviso: %v\n", err)
 	}
 
@@ -126,7 +128,7 @@ func (c *StartCmd) Run(args []string) error {
 		javaArgs = append(javaArgs, "--inactivity-timeout", strconv.Itoa(timeoutSecs))
 	}
 
-	cmd := exec.Command("java", javaArgs...)
+	cmd := exec.Command(javaExec, javaArgs...)
 	cmd.Stdout = nil // Desacopla stdout do processo filho
 	cmd.Stderr = nil
 
@@ -157,7 +159,7 @@ func (c *StartCmd) Run(args []string) error {
 	return nil
 }
 
-// findJar localiza o assinador.jar nas localizações conhecidas.
+// findJar localiza o assinador.jar ou o compila automaticamente com Maven.
 func (c *StartCmd) findJar() (string, error) {
 	if c.jarPath != "" {
 		if _, err := os.Stat(c.jarPath); err == nil {
@@ -167,19 +169,74 @@ func (c *StartCmd) findJar() (string, error) {
 	}
 
 	// Caminhos de busca automática
+	home, _ := os.UserHomeDir()
 	candidates := []string{
-		"docs/aulas/projetos/assinador-java/target/assinador-java-1.0.0-SNAPSHOT-jar-with-dependencies.jar",
+		jarBuildPath,
 		"assinador.jar",
-		filepath.Join(os.Getenv("HOME"), ".assinador", "assinador.jar"),
+		filepath.Join(home, ".assinador", "assinador.jar"),
 	}
 
 	for _, p := range candidates {
 		if _, err := os.Stat(p); err == nil {
+			slog.Info("assinador.jar encontrado", "caminho", p)
 			return p, nil
 		}
 	}
 
-	return "", fmt.Errorf("assinador.jar não encontrado nos caminhos padrão; use --jar para especificar o caminho")
+	// JAR não encontrado — tenta compilar com Maven
+	fmt.Fprintf(c.errOut, "assinador.jar não encontrado. Tentando compilar com Maven...\n")
+	if err := c.buildJar(); err != nil {
+		slog.Warn("compilação automática falhou", "erro", err)
+		return "", fmt.Errorf("assinador.jar não encontrado e compilação automática falhou (%v); use --jar <caminho>", err)
+	}
+
+	if _, err := os.Stat(jarBuildPath); err == nil {
+		fmt.Fprintf(c.errOut, "assinador.jar compilado com sucesso.\n")
+		return jarBuildPath, nil
+	}
+
+	return "", fmt.Errorf("assinador.jar não encontrado após compilação; use --jar para especificar o caminho")
+}
+
+// buildJar compila o assinador.jar via Maven (requer mvn no PATH).
+func (c *StartCmd) buildJar() error {
+	mvn, err := exec.LookPath("mvn")
+	if err != nil {
+		return fmt.Errorf("maven não encontrado no PATH")
+	}
+	jarDir := "docs/aulas/projetos/assinador-java"
+	cmd := exec.Command(mvn, "clean", "package", "-DskipTests", "--batch-mode", "--no-transfer-progress")
+	cmd.Dir = jarDir
+	cmd.Stdout = c.errOut
+	cmd.Stderr = c.errOut
+	return cmd.Run()
+}
+
+// resolveJava retorna o caminho do executável java, provisionando automaticamente se necessário.
+func (c *StartCmd) resolveJava() (string, error) {
+	// 1. Verificar PATH
+	if path, err := exec.LookPath("java"); err == nil {
+		slog.Info("java encontrado no PATH", "caminho", path)
+		return path, nil
+	}
+
+	// 2. Verificar cache local (~/.assinador/jdk/)
+	localBin := localJDKBin()
+	if _, err := os.Stat(localBin); err == nil {
+		slog.Info("java encontrado no cache local", "caminho", localBin)
+		return localBin, nil
+	}
+
+	// 3. Provisionar automaticamente via Adoptium
+	fmt.Fprintf(c.errOut, "java não encontrado no PATH nem no cache local.\n")
+	if err := downloadAndProvisionJDK(c.errOut); err != nil {
+		fmt.Fprintf(c.errOut, "Provisioning falhou: %v\n", err)
+		fmt.Fprintf(c.errOut, "Solução: instale JDK 21+ manualmente em https://adoptium.net\n")
+		return "", fmt.Errorf("JVM não disponível e provisionamento automático falhou: %w", err)
+	}
+
+	slog.Info("JDK provisionado com sucesso", "caminho", localBin)
+	return localBin, nil
 }
 
 // waitForReady aguarda até que o endpoint de health retorne status UP ou o timeout expire.
@@ -211,12 +268,12 @@ func isPortOccupied(port int) bool {
 }
 
 // checkJavaVersion verifica se a versão do Java é >= 21.
-func checkJavaVersion(errOut io.Writer) error {
-	out, err := exec.Command("java", "--version").Output()
+func checkJavaVersion(javaExec string, errOut io.Writer) error {
+	out, err := exec.Command(javaExec, "--version").Output()
 	if err != nil {
-		// Tenta com -version (Java antigo)
-		out, err = exec.Command("java", "-version").Output()
-		if err != nil {
+		// Tenta com -version (Java antigo imprime em stderr)
+		out, _ = exec.Command(javaExec, "-version").CombinedOutput()
+		if len(out) == 0 {
 			return fmt.Errorf("não foi possível verificar versão do Java: %v", err)
 		}
 	}

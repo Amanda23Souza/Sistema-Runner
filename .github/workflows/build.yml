@@ -2,10 +2,10 @@ name: Build, Test and Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release-final ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, release-final ]
 
 permissions:
   contents: write
