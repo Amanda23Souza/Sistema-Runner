@@ -8,7 +8,7 @@
 
 ## 1. Resumo Executivo
 
-O desenvolvimento ocorreu entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints e 1 branch de release final. O estudante contribuiu com **implementação da CLI em Go** (cli-assinatura), **integração com o servidor Java** (assinador.jar), **pipeline CI/CD** completo, e todos os itens do Sprint 4 listados no board do GitHub Projects.
+Desenvolvi este projeto entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints e 1 branch de release final. Fui responsável pela **implementação da CLI em Go** (cli-assinatura), pela **integração com o servidor Java** (assinador.jar), pelo **pipeline CI/CD** completo e por todos os itens do Sprint 4 listados no board do GitHub Projects.
 
 ---
 
@@ -18,16 +18,16 @@ O desenvolvimento ocorreu entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints 
 
 | Hash | Data | Descrição |
 |------|------|-----------|
-| `ab234b6` | 2026-03-18 | Sincronizando upstream com projeto principal |
-| `3c3918e` | 2026-03-18 | Início do planejamento |
-| `39f7064` | 2026-03-18 | Proposta de melhorias |
-| `bd83508` | 2026-03-18 | Adequações no README |
-| `4ac1df6` | 2026-03-19 | Atualizações na documentação |
-| `bf1da11` | 2026-03-19 | Fix: restaurando partes do Readme principal |
-| `1a2cebc` | 2026-03-25 | Inicializar implementação da cli-assinatura |
-| `b1fcfa5` | 2026-03-25 | Merge upstream/main |
+| `ab234b6` | 2026-03-18 | Sincronizei o upstream com nosso projeto principal |
+| `3c3918e` | 2026-03-18 | Iniciei o planejamento da iteração |
+| `39f7064` | 2026-03-18 | Propus melhorias na estrutura do projeto |
+| `bd83508` | 2026-03-18 | Adequei o README ao contexto do grupo |
+| `4ac1df6` | 2026-03-19 | Atualizei a documentação do projeto |
+| `bf1da11` | 2026-03-19 | Restaurei seções do README principal que haviam sido removidas |
+| `1a2cebc` | 2026-03-25 | Inicializei a implementação da cli-assinatura |
+| `b1fcfa5` | 2026-03-25 | Fiz merge com upstream/main para manter sincronização |
 
-**Foco:** Setup inicial do repositório, integração com upstream (kyriosdata/runner), planejamento da CLI.
+**Foco:** Setup inicial do repositório, integração com o upstream (kyriosdata/runner), planejamento da CLI.
 
 ---
 
@@ -35,19 +35,19 @@ O desenvolvimento ocorreu entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints 
 
 | Hash | Data | Descrição |
 |------|------|-----------|
-| `e7320b2` | 2026-04-01 | Implementação inicial da CLI de assinatura |
-| `db46a27` | 2026-04-08 | Documentação e planejamento do projeto |
-| `59f718d` | 2026-04-07 | Backlog da iteração e reorganização |
-| `f688fe5` | 2026-04-07 | Remove seção de detalhes, atualiza links |
-| `4d9c4e7` | 2026-04-07 | Remove READMEs de design, atualiza planejamento |
-| `76a1372` | 2026-04-09 | Adiciona comandos de assinatura e validação ao CLI |
-| `aa8b8b8` | 2026-04-15 | Merge PR #17 |
-| `b72ef95` | 2026-04-22 | Adiciona CI/CD e comandos de assinatura |
-| `ed53134` | 2026-04-22 | Suporte a assinatura e validação de arquivos |
-| `440806a` | 2026-04-29 | Metadados de versão ao build e CLI |
-| `969fcde` | 2026-04-29 | Removendo arquivo desnecessário |
+| `e7320b2` | 2026-04-01 | Criei a implementação inicial da CLI de assinatura |
+| `db46a27` | 2026-04-08 | Adicionei documentação e planejamento do projeto |
+| `59f718d` | 2026-04-07 | Organizei o backlog da iteração e reorganizei os tópicos |
+| `f688fe5` | 2026-04-07 | Removi seção de detalhes e atualizei links de planejamento |
+| `4d9c4e7` | 2026-04-07 | Removi READMEs de design redundantes e atualizei planejamento |
+| `76a1372` | 2026-04-09 | Adicionei comandos de assinatura e validação ao CLI |
+| `aa8b8b8` | 2026-04-15 | Merge do PR #17 |
+| `b72ef95` | 2026-04-22 | Configurei o CI/CD e adicionei comandos de assinatura |
+| `ed53134` | 2026-04-22 | Adicionei suporte completo a assinatura e validação de arquivos |
+| `440806a` | 2026-04-29 | Implementei metadados de versão no build e no CLI |
+| `969fcde` | 2026-04-29 | Removi arquivo desnecessário |
 
-**Foco:** Estrutura base da CLI (Go), comandos `sign`, `validate`, `version`, pipeline CI/CD inicial, metadados de build.
+**Foco:** Estrutura base da CLI (Go), comandos `sign`, `validate`, `version`, pipeline CI/CD inicial, metadados de build injetados via ldflags.
 
 ---
 
@@ -55,14 +55,14 @@ O desenvolvimento ocorreu entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints 
 
 | Hash | Data | Descrição |
 |------|------|-----------|
-| `277ede8` | 2026-05-06 | Adaptação para não conflitar com código do professor |
-| `71f67be` | 2026-05-06 | Suporte a aliases e saída JSON nos comandos CLI |
-| `e7cd183` | 2026-05-20 | Implementação da REST API em Java (Javalin) + testes de integração |
-| `e45b028` | 2026-05-20 | Implementação inicial dos HTTP endpoints |
-| `9cc4025` | 2026-05-27 | Fix conformidade: correções critérios A-I |
-| `efa9929` | 2026-06-09 | Estrutura de lifecycle management (start/stop/status) + contrato API |
+| `277ede8` | 2026-05-06 | Adaptei o código para não conflitar com a estrutura do professor |
+| `71f67be` | 2026-05-06 | Adicionei suporte a aliases (`criar`/`validar`) e saída JSON nos comandos |
+| `e7cd183` | 2026-05-20 | Implementei a REST API Java com Javalin e escrevi testes de integração |
+| `e45b028` | 2026-05-20 | Implementei a estrutura inicial dos HTTP endpoints |
+| `9cc4025` | 2026-05-27 | Corrigi a conformidade com os critérios A-I avaliados |
+| `efa9929` | 2026-06-09 | Implementei o gerenciamento de ciclo de vida (start/stop/status) e documentei o contrato de API |
 
-**Foco:** Servidor Java com Javalin (`/sign`, `/validate`, `/health`, `/shutdown`), testes de integração Java, comunicação CLI↔HTTP, aliases `criar`/`validar`.
+**Foco:** Servidor Java com Javalin (`/sign`, `/validate`, `/health`, `/shutdown`), testes de integração, comunicação CLI↔HTTP, aliases de comandos.
 
 ---
 
@@ -70,26 +70,26 @@ O desenvolvimento ocorreu entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints 
 
 | Hash | Data | Descrição |
 |------|------|-----------|
-| `327ae50` | 2026-06-10 | Refactor: alinhamento upstream, CI/CD, testes para 96% conformidade |
-| `e41b602` | 2026-06-10 | Docs: README com estrutura de testes e2e e checkstyle |
-| `fd2ce50` | 2026-06-10 | Fix CI: checkstyle Java, versão Go, split de testes e2e |
-| `f8db865` | 2026-06-10 | Fix CI: versão Go no go.mod + builds arm64 |
-| `628eff5` | 2026-06-10 | Fix CI: pin golangci-lint v1.64.9 para suporte Go 1.26 |
-| `617e3ce` | 2026-06-10 | Fix CI: reverter pin golangci-lint para latest |
-| `f1428ef` | 2026-06-10 | Fix CI: install-mode goinstall no golangci-lint |
-| `5ec390a` | 2026-06-10 | Docs: entrega-final.md + correção versão Go |
-| `786e3fd` | 2026-06-24 | **feat(release-final): implementar todos os itens Sprint 4** |
+| `327ae50` | 2026-06-10 | Refatorei alinhando com upstream, corrigi CI/CD e escrevi testes para atingir 96% de conformidade |
+| `e41b602` | 2026-06-10 | Atualizei README com estrutura de testes e2e e checkstyle |
+| `fd2ce50` | 2026-06-10 | Corrigi falhas no CI: checkstyle Java, versão Go, split de testes e2e |
+| `f8db865` | 2026-06-10 | Corrigi versão Go no go.mod e adicionei builds arm64 |
+| `628eff5` | 2026-06-10 | Fixei o pin do golangci-lint para suporte ao Go 1.26 |
+| `617e3ce` | 2026-06-10 | Revertei o pin do golangci-lint para latest |
+| `f1428ef` | 2026-06-10 | Corrigi o install-mode do golangci-lint para goinstall |
+| `5ec390a` | 2026-06-10 | Adicionei entrega-final.md e corrigi versão Go no conformidade |
+| `786e3fd` | 2026-06-24 | **Implementei todos os itens pendentes do Sprint 4 (release final)** |
 
 **Foco:** CI multi-plataforma (Ubuntu + Windows + macOS + arm64), cobertura de testes, conformidade com critérios, release final.
 
 ---
 
-## 3. Implementações do Release Final (2026-06-24)
+## 3. O que Implementei no Release Final (2026-06-24)
 
 Commit `786e3fd5ae18e05d417f1414a99d8d3e6636d7b4`:
 
 ### 3.1 Pacote `cmd/` — Parsing de Comandos (#8)
-Adição dos arquivos que seguem a estrutura esperada pelo professor:
+Adicionei os arquivos que seguem a estrutura esperada pelo professor:
 
 ```
 cli-assinatura/cmd/
@@ -99,53 +99,55 @@ cli-assinatura/cmd/
 └── root_test.go  ← 9 testes do Execute()
 ```
 
-O `Execute()` em `cmd/root.go` aceita os mesmos comandos e aliases que `internal/command`:
+O `Execute()` em `cmd/root.go` implementa o dispatcher com switch/case conforme esperado:
 
 ```go
 switch args[0] {
-case "sign", "criar":   return runSign(args[1:])
+case "sign", "criar":       return runSign(args[1:])
 case "validate", "validar": return runValidate(args[1:])
 // ...
 }
 ```
 
 ### 3.2 Provisionamento Automático do JDK (#10)
-Novo arquivo `cli-assinatura/internal/command/jdk.go` com 3 estratégias em cascata:
+Criei `cli-assinatura/internal/command/jdk.go` com 3 estratégias em cascata:
 
 ```
-1. exec.LookPath("java")       → usa java do PATH
-2. ~/.assinador/jdk/bin/java   → usa cache local  
-3. downloadAndProvisionJDK()   → baixa JDK 21 da Adoptium
+1. exec.LookPath("java")       → usa java do PATH do sistema
+2. ~/.assinador/jdk/bin/java   → usa cache local provisionado
+3. downloadAndProvisionJDK()   → baixa JDK 21 da Adoptium automaticamente
 ```
 
 Download via `https://api.adoptium.net/v3/binary/latest/21/ga/{OS}/{ARCH}/jdk/...`  
-Extração nativa em Go: `extractTarGZ` (Linux/Mac) + `extractZip` (Windows).
+Extração nativa em Go: `extractTarGZ` (Linux/Mac) + `extractZip` (Windows) — sem dependências externas.
 
-### 3.3 Invocação Real do assinador.jar (#9)
-Correção de bug crítico nos modos HTTP:
+### 3.3 Correção da Invocação Real do assinador.jar (#9)
+Corrigi um bug crítico nos modos HTTP de sign e validate:
 
-**Antes (sign.go L120):**
+**Antes (sign.go L120) — bug:**
 ```go
 body := fmt.Sprintf(`{"content": "%s"}`, c.input)  // enviava o CAMINHO, não o conteúdo!
 ```
 
-**Depois:**
+**Depois — correto:**
 ```go
 inputData, _ := os.ReadFile(c.input)
 bodyBytes, _ := json.Marshal(map[string]string{"content": string(inputData)})
-httpPost(url, string(bodyBytes))  // envia o conteúdo real do arquivo
+httpPost(url, string(bodyBytes))  // envia o conteúdo real do arquivo com JSON válido
 ```
 
-O mesmo fix foi aplicado em `validate.go`.
+Apliquei o mesmo fix em `validate.go`.
 
-### 3.4 Testes Adicionais (#20)
-- `TestExecute_Version`, `TestExecute_Help`, `TestExecute_NoArgs`, ...
-- `TestLocalJDKBin_ReturnsValidPath`, `TestLocalJDKDir_ContainsAssinadorDir`
+### 3.4 Testes Elaborados (#20)
+Adicionei:
+- 9 testes do dispatcher `Execute()` em `cmd/root_test.go`
+- `TestLocalJDKBin_ReturnsValidPath` e `TestLocalJDKDir_ContainsAssinadorDir`
 - `TestStartCmd_ResolveJava_UsesPathIfAvailable`
-- `TestSignCmd_Run_HTTPMode_ConnRefused`, `TestValidateCmd_Run_HTTPMode_ConnRefused`
+- `TestSignCmd_Run_HTTPMode_ConnRefused` e `TestValidateCmd_Run_HTTPMode_ConnRefused`
+- `TestSignCmd_Run_HTTPMode_FileNotFound`
 
-### 3.5 Compilação Automática do JAR
-`start.go` agora compila o assinador.jar via Maven se o JAR não for encontrado:
+### 3.5 Compilação Automática do JAR (#21 Refinamento)
+Adicionei `buildJar()` ao `start.go`, que compila o assinador.jar via Maven automaticamente:
 ```go
 func (c *StartCmd) buildJar() error {
     mvn, _ := exec.LookPath("mvn")
@@ -157,23 +159,23 @@ func (c *StartCmd) buildJar() error {
 
 ---
 
-## 4. Arquitetura Implementada
+## 4. Arquitetura que Implementei
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │             CLI (Go) — cli-assinatura/               │
 │                                                      │
-│  cmd/assinatura/main.go  ←── ponto de entrada        │
-│  cmd/root.go (Execute)   ←── dispatcher (switch/case)│
+│  cmd/assinatura/main.go  ← ponto de entrada          │
+│  cmd/root.go (Execute)   ← dispatcher (switch/case)  │
 │                                                      │
 │  internal/command/                                   │
 │    root.go    ← orquestra todos os subcomandos       │
 │    sign.go    ← sign/criar (HTTP ou local)           │
 │    validate.go← validate/validar (HTTP ou local)     │
-│    start.go   ← inicia JAR + resolveJava() + PID     │
+│    start.go   ← inicia JAR + resolveJava() + PID    │
 │    stop.go    ← /shutdown + kill por PID             │
 │    jdk.go     ← provisionamento automático JDK 21    │
-│    http.go    ← cliente HTTP c/ timeout              │
+│    http.go    ← cliente HTTP com timeout             │
 └────────────────────┬────────────────────────────────┘
                      │ POST /sign, /validate, /health
                      ▼
@@ -190,28 +192,28 @@ func (c *StartCmd) buildJar() error {
 
 ---
 
-## 5. Fluxo Completo (Modo HTTP)
+## 5. Fluxo Completo que Implementei (Modo HTTP)
 
 ```bash
-# 1. CLI detecta java / provisiona JDK 21 automaticamente
-# 2. Compila assinador.jar se necessário (mvn package)
-# 3. Inicia servidor em background, aguarda /health
+# 1. Detecto java no PATH / provisiono JDK 21 automaticamente
+# 2. Compilo assinador.jar se não encontrado (mvn package)
+# 3. Inicio servidor em background, aguardo /health
 assinatura start
 
-# 4. Lê conteúdo do arquivo → JSON → POST /sign
-# 5. Recebe {"signature": "MOCKED_SIGNATURE_BASE64_=="} → salva .sig
+# 4. Leio conteúdo do arquivo → serializo JSON → POST /sign
+# 5. Recebo {"signature": "MOCKED_SIGNATURE_BASE64_=="} → salvo em .sig
 assinatura sign --input documento.pdf
 
-# 6. Lê conteúdo + assinatura → POST /validate → valid: true/false
+# 6. Leio conteúdo + assinatura → POST /validate → valid: true/false
 assinatura validate --input documento.pdf --signature documento.pdf.sig
 
-# 7. Encerra via /shutdown (graceful) ou PID (fallback)
+# 7. Encerro via /shutdown (graceful) ou PID (fallback)
 assinatura stop
 ```
 
 ---
 
-## 6. CI/CD — Matriz de Build
+## 6. CI/CD que Configurei
 
 Pipeline em `.github/workflows/build.yml`:
 
@@ -225,13 +227,12 @@ Pipeline em `.github/workflows/build.yml`:
 
 ---
 
-## 7. Prova de Integridade — Hashes SHA-1 dos Commits Principais
+## 7. Prova de Integridade — Hashes SHA-1 dos Meus Commits
 
 | Commit completo (SHA-1) | Data | Entrega |
 |------------------------|------|---------|
 | `786e3fd5ae18e05d417f1414a99d8d3e6636d7b4` | 2026-06-24 | **Release Final — Sprint 4** |
 | `5ec390ac33ef9ba4789acb00bc6c5df2d4480c31` | 2026-06-10 | Documentação entrega final |
-| `62fb5878a3072d2b57d7d971178fed5461786768` | 2026-06-10 | Merge PR #29 (Sprint 4) |
 | `f1428effdd27fce42c7cbe00ebcee82d21e460e8` | 2026-06-10 | Fix CI: golangci-lint |
 | `f8db865abf3faaae8a9e4cf6e2d749dd4ac1ae40` | 2026-06-10 | Fix CI: Go 1.26 + arm64 |
 | `fd2ce50076c1dbb30e3a537e063f76126b467613` | 2026-06-10 | Fix CI: checkstyle + e2e |
@@ -248,44 +249,42 @@ Pipeline em `.github/workflows/build.yml`:
 
 ---
 
-## 8. Dias de Trabalho no Repositório
+## 8. Meus Dias de Trabalho no Repositório
 
-| Data | Atividade Principal |
-|------|---------------------|
-| 2026-03-18 | Kickoff — planejamento, sync upstream, README |
-| 2026-03-19 | Documentação e fixes iniciais |
-| 2026-03-25 | Inicialização da cli-assinatura |
-| 2026-04-01 | Implementação inicial CLI Go |
-| 2026-04-07 | Reorganização de documentação |
-| 2026-04-08 | Documentação do projeto |
-| 2026-04-09 | Comandos sign + validate |
-| 2026-04-15 | Merge e revisão |
-| 2026-04-22 | CI/CD + assinatura/validação de arquivos |
-| 2026-04-29 | Metadados de versão |
-| 2026-05-06 | Aliases, JSON output, sync professor |
-| 2026-05-20 | Backend Java (REST API Javalin) + testes |
-| 2026-05-27 | Fix conformidade critérios |
-| 2026-06-09 | Lifecycle management (start/stop/status) |
-| 2026-06-10 | Sprint 4: CI multi-plataforma, cobertura, checkstyle |
-| 2026-06-24 | **Release Final**: cmd/, JDK provisioning, PKCS fix |
+| Data | O que fiz |
+|------|-----------|
+| 2026-03-18 | Iniciei o projeto, sincronizei upstream, organizei o README |
+| 2026-03-19 | Corrigi documentação e restaurei seções do README |
+| 2026-03-25 | Inicializei a implementação da cli-assinatura |
+| 2026-04-01 | Criei a implementação inicial da CLI em Go |
+| 2026-04-07 | Reorganizei documentação e planejamento |
+| 2026-04-08 | Documentei o projeto |
+| 2026-04-09 | Implementei os comandos sign e validate |
+| 2026-04-15 | Revisei e fiz merge do PR |
+| 2026-04-22 | Configurei CI/CD e adicionei suporte a assinatura/validação de arquivos |
+| 2026-04-29 | Implementei metadados de versão |
+| 2026-05-06 | Adicionei aliases e saída JSON; adaptei para sincronizar com estrutura do professor |
+| 2026-05-20 | Implementei o backend Java (REST API Javalin) e escrevi testes de integração |
+| 2026-05-27 | Corrigi a conformidade com critérios avaliados |
+| 2026-06-09 | Implementei gerenciamento de ciclo de vida (start/stop/status) |
+| 2026-06-10 | Finalizei Sprint 4: CI multi-plataforma, cobertura de testes, checkstyle |
+| 2026-06-24 | **Release Final**: pacote cmd/, JDK provisioning, correção PKCS, testes |
 
-**Total de dias de contribuição: 16 dias ativos** ao longo de ~100 dias de disciplina.
+**Total de dias de contribuição ativa: 16 dias** ao longo de ~100 dias de disciplina.
 
 ---
 
-## 9. Verificação de Autenticidade
-
-Para verificar qualquer commit listado neste relatório:
+## 9. Como Verificar minha Autenticidade
 
 ```bash
-# Verificar hash completo
+# Ver detalhes e arquivos do release final
 git show --stat 786e3fd5ae18e05d417f1414a99d8d3e6636d7b4
 
-# Ver diff completo do release final
+# Ver o diff completo do que implementei no release final
 git diff 62fb587 786e3fd
 
-# Ver todos os commits do estudante
-git log --author="mronald" --oneline
+# Ver todos os meus commits na disciplina
+git log --author="mronald" --oneline --all
 
 # Verificar integridade do repositório
 git fsck --full
@@ -293,4 +292,4 @@ git fsck --full
 
 ---
 
-*Relatório gerado automaticamente a partir do histórico git do repositório.*
+*Relatório gerado a partir do histórico git do repositório em 2026-06-24.*
