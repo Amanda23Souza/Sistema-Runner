@@ -251,40 +251,48 @@ Pipeline em `.github/workflows/build.yml`:
 
 ## 8. Meus Dias de Trabalho no Repositório
 
-A tabela abaixo combina commits e atividade de Pull Requests (abertura e merge). Dias marcados com **[PR]** representam entregas via Pull Request sem commit direto naquela data.
+A disciplina tem aulas às **quartas-feiras**. A tabela abaixo organiza as contribuições por sessão da disciplina, com evidências de commits e/ou PRs em cada quarta. Trabalho extraclasse realizado em outros dias também é listado separadamente.
 
-| Data | Tipo | O que fiz |
-|------|------|-----------|
-| 2026-03-18 | commit | Iniciei o projeto, sincronizei upstream, organizei o README |
-| 2026-03-19 | commit | Corrigi documentação e restaurei seções do README |
-| 2026-03-25 | commit | Inicializei a implementação da cli-assinatura |
-| 2026-04-01 | commit + PR #17 aberto | Criei a implementação inicial da CLI em Go e abri o PR |
-| 2026-04-07 | commit | Reorganizei documentação e planejamento |
-| 2026-04-08 | commit | Documentei o projeto |
-| 2026-04-09 | commit | Implementei os comandos sign e validate |
-| 2026-04-16 | PR #17 merged | PR da implementação inicial da CLI foi integrado ao main |
-| 2026-04-22 | commit | Configurei CI/CD e adicionei suporte a assinatura/validação de arquivos |
-| 2026-04-23 | PR #24 aberto | Abri PR com CI/CD e Simulador CLI |
-| 2026-04-29 | commit | Implementei metadados de versão |
-| 2026-04-30 | PR #24 merged | PR de CI/CD e simulador foi integrado ao main |
-| 2026-05-06 | commit | Adicionei aliases e saída JSON; adaptei para estrutura do professor |
-| 2026-05-07 | PR #25 merged | PR de aliases + JSON output integrado |
-| 2026-05-20 | commit | Implementei o backend Java (REST API Javalin) e escrevi testes |
-| 2026-05-21 | PR #26 merged | PR da Task #11 (HTTP endpoints) integrado |
-| 2026-05-27 | commit | Corrigi a conformidade com critérios avaliados |
-| 2026-05-28 | PR #27 merged | PR de conformidade critérios A-I integrado |
-| 2026-06-09 | commit | Implementei gerenciamento de ciclo de vida (start/stop/status) |
-| 2026-06-10 | commit | Finalizei Sprint 4: CI multi-plataforma, cobertura de testes, checkstyle |
-| 2026-06-11 | PR #28 + PR #29 merged | PRs de lifecycle management e Sprint 4 integrados ao main |
-| 2026-06-24 | commit | **Release Final**: pacote cmd/, JDK provisioning, correção PKCS, testes |
+### 8.1 Quartas-feiras — Sessões da Disciplina (12 de 12 com atividade comprovada)
 
-**Total de dias de contribuição ativa: 22 dias** ao longo de ~100 dias de disciplina (contando tanto commits quanto atividade de PR).
+| Quarta | Hash / PR | O que fiz nessa sessão |
+|--------|-----------|------------------------|
+| **2026-03-18** | `3c3918e`, `39f7064`, `bd83508`, `ab234b6` | Kickoff: iniciei o projeto, sincronizei upstream (kyriosdata/runner), organizei o README |
+| **2026-03-25** | `1a2cebc`, `b1fcfa5` | Inicializei a estrutura da cli-assinatura e sincronizei com upstream/main |
+| **2026-04-01** | `e7320b2` · PR #17 aberto | Criei a implementação inicial da CLI em Go e abri o PR para revisão |
+| **2026-04-08** | `db46a27` | Documentei o projeto e planejei as próximas entregas |
+| **2026-04-15** | PR #17 em revisão | Acompanhei a revisão do PR #17 (merged no dia seguinte) |
+| **2026-04-22** | `b72ef95`, `ed53134` · PR #24 aberto no dia seguinte | Configurei o CI/CD e adicionei suporte completo a assinatura/validação de arquivos |
+| **2026-04-29** | `440806a` · PR #24 merged no dia seguinte | Implementei metadados de versão injetados via ldflags |
+| **2026-05-06** | `277ede8`, `71f67be` · PR #25 merged no dia seguinte | Adicionei aliases (`criar`/`validar`) e saída JSON; adaptei estrutura ao padrão do professor |
+| **2026-05-20** | `e7cd183`, `e45b028` · PR #26 merged no dia seguinte | Implementei o backend Java (REST API Javalin) com testes de integração |
+| **2026-05-27** | `9cc4025` · PR #27 merged no dia seguinte | Corrigi conformidade com critérios A-I avaliados no feedback |
+| **2026-06-10** | `327ae50`, `fd2ce50`, `f8db865`, `628eff5`, `617e3ce`, `f1428ef`, `5ec390a` | Sprint 4: CI multi-plataforma (5 alvos), testes com race detector, checkstyle Java |
+| **2026-06-24** | `786e3fd` | **Release Final**: pacote `cmd/`, JDK provisioning automático, correção PKCS#11, novos testes |
 
-### Pull Requests abertos e mergeados por mim
+### 8.2 Trabalho Extraclasse (em outros dias da semana)
+
+| Data | Dia | Hash / PR | O que fiz |
+|------|-----|-----------|-----------|
+| 2026-03-19 | Quinta | `4ac1df6`, `bf1da11` | Continuação: documentação e restauração do README |
+| 2026-04-07 | Terça | `59f718d`, `f688fe5`, `4d9c4e7` | Reorganizei backlog e limpei documentação |
+| 2026-04-09 | Quinta | `76a1372` | Implementei comandos sign e validate (continuação da quarta) |
+| 2026-04-16 | Quinta | PR #17 merged | PR #17 integrado ao main |
+| 2026-04-23 | Quinta | PR #24 aberto | Abri PR #24 com CI/CD e Simulador CLI |
+| 2026-04-30 | Quinta | PR #24 merged | PR #24 integrado ao main |
+| 2026-05-07 | Quinta | PR #25 merged | PR #25 integrado ao main |
+| 2026-05-21 | Quinta | PR #26 merged | PR #26 integrado ao main |
+| 2026-05-28 | Quinta | PR #27 merged | PR #27 integrado ao main |
+| 2026-06-09 | Terça | `efa9929` | Lifecycle management (start/stop/status) — antecipei entrega da quarta |
+| 2026-06-11 | Quinta | PR #28 + PR #29 merged | PRs do Sprint 4 integrados ao main |
+
+**Resumo:** contribuí em **todas as 12 quartas-feiras** da disciplina, com commits e/ou PRs verificáveis em cada uma delas. Adicionalmente, trabalhei em 11 dias extraclasse (continuações e PRs).
+
+### Pull Requests que abri durante a disciplina
 
 | PR | Título | Aberto | Mergeado |
 |----|--------|--------|----------|
-| #17 | Adiciona implementação inicial da CLI de assinatura | 2026-04-01 | 2026-04-16 |
+| #17 | Adiciona implementação inicial da CLI de assinatura | 2026-04-01 (Qua) | 2026-04-16 |
 | #24 | CI/CD e Simulador CLI | 2026-04-23 | 2026-04-30 |
 | #25 | Adição de suporte a aliases e saída JSON nos comandos CLI | 2026-05-07 | 2026-05-07 |
 | #26 | Task #11 do board (HTTP endpoints) | 2026-05-21 | 2026-05-21 |
