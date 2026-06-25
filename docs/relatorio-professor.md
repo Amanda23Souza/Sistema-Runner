@@ -8,7 +8,7 @@
 
 ## 1. Resumo Executivo
 
-Desenvolvi este projeto entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints e 1 branch de release final. Fui responsável pela **implementação da CLI em Go** (cli-assinatura), pela **integração com o servidor Java** (assinador.jar), pelo **pipeline CI/CD** completo e por todos os itens do Sprint 4 listados no board do GitHub Projects.
+Resumo da minha participação Neste projeto entre **2026-03-18 e 2026-06-24**, cobrindo 4 sprints e 1 branch de release final. Fui responsável pela **implementação da CLI em Go** (cli-assinatura), pela **integração com o servidor Java** (assinador.jar) e pelo **pipeline CI/CD** completo e por boa parte dos itens do Sprint 4 listados no board do GitHub Projects.
 
 ---
 
@@ -251,26 +251,46 @@ Pipeline em `.github/workflows/build.yml`:
 
 ## 8. Meus Dias de Trabalho no Repositório
 
-| Data | O que fiz |
-|------|-----------|
-| 2026-03-18 | Iniciei o projeto, sincronizei upstream, organizei o README |
-| 2026-03-19 | Corrigi documentação e restaurei seções do README |
-| 2026-03-25 | Inicializei a implementação da cli-assinatura |
-| 2026-04-01 | Criei a implementação inicial da CLI em Go |
-| 2026-04-07 | Reorganizei documentação e planejamento |
-| 2026-04-08 | Documentei o projeto |
-| 2026-04-09 | Implementei os comandos sign e validate |
-| 2026-04-15 | Revisei e fiz merge do PR |
-| 2026-04-22 | Configurei CI/CD e adicionei suporte a assinatura/validação de arquivos |
-| 2026-04-29 | Implementei metadados de versão |
-| 2026-05-06 | Adicionei aliases e saída JSON; adaptei para sincronizar com estrutura do professor |
-| 2026-05-20 | Implementei o backend Java (REST API Javalin) e escrevi testes de integração |
-| 2026-05-27 | Corrigi a conformidade com critérios avaliados |
-| 2026-06-09 | Implementei gerenciamento de ciclo de vida (start/stop/status) |
-| 2026-06-10 | Finalizei Sprint 4: CI multi-plataforma, cobertura de testes, checkstyle |
-| 2026-06-24 | **Release Final**: pacote cmd/, JDK provisioning, correção PKCS, testes |
+A tabela abaixo combina commits e atividade de Pull Requests (abertura e merge). Dias marcados com **[PR]** representam entregas via Pull Request sem commit direto naquela data.
 
-**Total de dias de contribuição ativa: 16 dias** ao longo de ~100 dias de disciplina.
+| Data | Tipo | O que fiz |
+|------|------|-----------|
+| 2026-03-18 | commit | Iniciei o projeto, sincronizei upstream, organizei o README |
+| 2026-03-19 | commit | Corrigi documentação e restaurei seções do README |
+| 2026-03-25 | commit | Inicializei a implementação da cli-assinatura |
+| 2026-04-01 | commit + PR #17 aberto | Criei a implementação inicial da CLI em Go e abri o PR |
+| 2026-04-07 | commit | Reorganizei documentação e planejamento |
+| 2026-04-08 | commit | Documentei o projeto |
+| 2026-04-09 | commit | Implementei os comandos sign e validate |
+| 2026-04-16 | PR #17 merged | PR da implementação inicial da CLI foi integrado ao main |
+| 2026-04-22 | commit | Configurei CI/CD e adicionei suporte a assinatura/validação de arquivos |
+| 2026-04-23 | PR #24 aberto | Abri PR com CI/CD e Simulador CLI |
+| 2026-04-29 | commit | Implementei metadados de versão |
+| 2026-04-30 | PR #24 merged | PR de CI/CD e simulador foi integrado ao main |
+| 2026-05-06 | commit | Adicionei aliases e saída JSON; adaptei para estrutura do professor |
+| 2026-05-07 | PR #25 merged | PR de aliases + JSON output integrado |
+| 2026-05-20 | commit | Implementei o backend Java (REST API Javalin) e escrevi testes |
+| 2026-05-21 | PR #26 merged | PR da Task #11 (HTTP endpoints) integrado |
+| 2026-05-27 | commit | Corrigi a conformidade com critérios avaliados |
+| 2026-05-28 | PR #27 merged | PR de conformidade critérios A-I integrado |
+| 2026-06-09 | commit | Implementei gerenciamento de ciclo de vida (start/stop/status) |
+| 2026-06-10 | commit | Finalizei Sprint 4: CI multi-plataforma, cobertura de testes, checkstyle |
+| 2026-06-11 | PR #28 + PR #29 merged | PRs de lifecycle management e Sprint 4 integrados ao main |
+| 2026-06-24 | commit | **Release Final**: pacote cmd/, JDK provisioning, correção PKCS, testes |
+
+**Total de dias de contribuição ativa: 22 dias** ao longo de ~100 dias de disciplina (contando tanto commits quanto atividade de PR).
+
+### Pull Requests abertos e mergeados por mim
+
+| PR | Título | Aberto | Mergeado |
+|----|--------|--------|----------|
+| #17 | Adiciona implementação inicial da CLI de assinatura | 2026-04-01 | 2026-04-16 |
+| #24 | CI/CD e Simulador CLI | 2026-04-23 | 2026-04-30 |
+| #25 | Adição de suporte a aliases e saída JSON nos comandos CLI | 2026-05-07 | 2026-05-07 |
+| #26 | Task #11 do board (HTTP endpoints) | 2026-05-21 | 2026-05-21 |
+| #27 | fix(conformidade): aplicar correções de critérios A-I | 2026-05-28 | 2026-05-28 |
+| #28 | feat: implement command structure for lifecycle management | 2026-06-11 | 2026-06-11 |
+| #29 | Marcello alterações (Sprint 4) | 2026-06-11 | 2026-06-11 |
 
 ---
 
