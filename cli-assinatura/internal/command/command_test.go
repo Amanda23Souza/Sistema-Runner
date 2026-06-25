@@ -7,6 +7,7 @@ package command
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -338,5 +339,110 @@ func TestVersionCmd_Run_Quiet(t *testing.T) {
 	output := strings.TrimSpace(out.String())
 	if strings.Contains(output, " ") {
 		t.Fatalf("--quiet deve retornar apenas o número de versão sem espaços, obteve: %q", output)
+	}
+}
+
+// ─────────────────────────────────────────────────────────
+// JDK Provisioning
+// ─────────────────────────────────────────────────────────
+
+// TestLocalJDKBin_ReturnsValidPath verifica que localJDKBin retorna caminho terminando em java.
+func TestLocalJDKBin_ReturnsValidPath(t *testing.T) {
+	bin := localJDKBin()
+	if bin == "" {
+		t.Fatal("localJDKBin() retornou string vazia")
+	}
+	if !strings.HasSuffix(bin, "java") && !strings.HasSuffix(bin, "java.exe") {
+		t.Fatalf("localJDKBin() deve terminar com 'java' ou 'java.exe', obteve: %q", bin)
+	}
+}
+
+// TestLocalJDKDir_ContainsAssinadorDir verifica que o diretório de cache contém ".assinador".
+func TestLocalJDKDir_ContainsAssinadorDir(t *testing.T) {
+	dir := localJDKDir()
+	if !strings.Contains(dir, ".assinador") {
+		t.Fatalf("localJDKDir() deve conter '.assinador', obteve: %q", dir)
+	}
+}
+
+// TestStartCmd_ResolveJava_UsesPathIfAvailable verifica que resolveJava usa java do PATH quando disponível.
+func TestStartCmd_ResolveJava_UsesPathIfAvailable(t *testing.T) {
+	if _, err := exec.LookPath("java"); err != nil {
+		t.Skip("java não encontrado no PATH — pulando teste de resolução")
+	}
+
+	cmd := NewStartCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	path, err := cmd.resolveJava()
+	if err != nil {
+		t.Fatalf("resolveJava() retornou erro quando java está no PATH: %v", err)
+	}
+	if path == "" {
+		t.Fatal("resolveJava() retornou caminho vazio")
+	}
+}
+
+// ─────────────────────────────────────────────────────────
+// SignCmd — modo HTTP (servidor mockado)
+// ─────────────────────────────────────────────────────────
+
+// TestSignCmd_Run_HTTPMode_ConnRefused verifica que modo http retorna erro de sistema
+// (não UserError) quando o servidor não está rodando.
+func TestSignCmd_Run_HTTPMode_ConnRefused(t *testing.T) {
+	tmp := t.TempDir()
+	inputPath := filepath.Join(tmp, "doc.txt")
+	_ = os.WriteFile(inputPath, []byte("conteúdo para assinar"), 0644)
+
+	cmd := NewSignCmd()
+	cmd.out = &bytes.Buffer{}
+	var errBuf bytes.Buffer
+	cmd.errOut = &errBuf
+
+	err := cmd.Run([]string{"--input", inputPath, "--mode", "http", "--port", "19999"})
+	if err == nil {
+		t.Fatal("esperava erro de conexão recusada no modo http")
+	}
+	if IsUserError(err) {
+		t.Fatalf("conexão recusada deve ser SystemError, não UserError: %v", err)
+	}
+}
+
+// TestValidateCmd_Run_HTTPMode_ConnRefused verifica que modo http retorna SystemError
+// quando o servidor não está rodando.
+func TestValidateCmd_Run_HTTPMode_ConnRefused(t *testing.T) {
+	tmp := t.TempDir()
+	inputPath := filepath.Join(tmp, "doc.txt")
+	sigPath := filepath.Join(tmp, "doc.sig")
+	_ = os.WriteFile(inputPath, []byte("conteúdo"), 0644)
+	_ = os.WriteFile(sigPath, []byte("assinatura-fake"), 0644)
+
+	cmd := NewValidateCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	err := cmd.Run([]string{"--input", inputPath, "--signature", sigPath, "--mode", "http", "--port", "19999"})
+	if err == nil {
+		t.Fatal("esperava erro de conexão recusada no modo http")
+	}
+	if IsUserError(err) {
+		t.Fatalf("conexão recusada deve ser SystemError, não UserError: %v", err)
+	}
+}
+
+// TestSignCmd_Run_HTTPMode_ReadsFileContent verifica que o modo http tenta ler o arquivo
+// (deve falhar com SystemError se o arquivo não existir, não UserError).
+func TestSignCmd_Run_HTTPMode_FileNotFound(t *testing.T) {
+	cmd := NewSignCmd()
+	cmd.out = &bytes.Buffer{}
+	cmd.errOut = &bytes.Buffer{}
+
+	err := cmd.Run([]string{"--input", "/tmp/arquivo-inexistente-xyz.txt", "--mode", "http", "--port", "19999"})
+	if err == nil {
+		t.Fatal("esperava erro para arquivo inexistente em modo http")
+	}
+	if IsUserError(err) {
+		t.Fatalf("arquivo inexistente deve ser SystemError, não UserError: %v", err)
 	}
 }

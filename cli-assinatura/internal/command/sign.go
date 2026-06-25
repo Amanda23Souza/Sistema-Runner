@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"strings"
 )
 
 // SignCmd implementa o comando "sign" (assinatura digital).
@@ -114,16 +113,27 @@ func (c *SignCmd) Run(args []string) error {
 	return c.runLocal()
 }
 
-// runHTTP invoca o servidor assinador via HTTP.
+// runHTTP lê o arquivo de entrada e envia seu conteúdo ao servidor assinador via HTTP.
 func (c *SignCmd) runHTTP() error {
-	url := fmt.Sprintf("http://localhost:%d/sign", c.port)
-	body := fmt.Sprintf(`{"content": "%s"}`, strings.ReplaceAll(c.input, `"`, `\"`))
-
-	if c.verbose {
-		slog.Info("enviando requisição HTTP", "url", url)
+	inputData, err := os.ReadFile(c.input)
+	if err != nil {
+		fmt.Fprintf(c.errOut, "Erro do sistema: não foi possível ler o arquivo de entrada %q.\n", c.input)
+		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
+		slog.Error("falha ao ler arquivo de entrada (modo http)", "input", c.input, "erro", err)
+		return fmt.Errorf("falha ao ler arquivo de entrada: %w", err)
 	}
 
-	resp, err := httpPost(url, body)
+	url := fmt.Sprintf("http://localhost:%d/sign", c.port)
+	bodyBytes, err := json.Marshal(map[string]string{"content": string(inputData)})
+	if err != nil {
+		return fmt.Errorf("erro ao serializar requisição: %w", err)
+	}
+
+	if c.verbose {
+		slog.Info("enviando requisição HTTP", "url", url, "bytes", len(inputData))
+	}
+
+	resp, err := httpPost(url, string(bodyBytes))
 	if err != nil {
 		fmt.Fprintf(c.errOut, "Erro do sistema: falha ao conectar ao servidor assinador em localhost:%d.\n", c.port)
 		fmt.Fprintf(c.errOut, "Causa: %v\n", err)
